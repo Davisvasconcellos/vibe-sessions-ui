@@ -180,8 +180,8 @@ export class CheckinComponent implements OnInit, OnDestroy {
         } catch {}
 
         if (!requiresAutoQuest) {
-          try { console.log('[CHECKIN][Destino] auto_checkin_flow_quest=false. Redirecionando home-guest com id_code'); } catch {}
-          this.router.navigate([`/events/home-guest/${idCode}`]);
+          try { console.log('[CHECKIN][Destino] auto_checkin_flow_quest=false. Redirecionando home-guest-v2 com id_code'); } catch {}
+          this.router.navigate([`/events/home-guest-v2/${idCode}`]);
           return;
         }
         // Fluxo simplificado: se flag true, abre questionário sem layout; caso contrário, home-guest.
@@ -189,8 +189,8 @@ export class CheckinComponent implements OnInit, OnDestroy {
         this.router.navigate([`/events/answer-plain/${idCode}`]);
       },
       error: () => {
-        try { console.log('[CHECKIN][Destino] Erro ao carregar /events/:id_code. Navegando home-guest com id_code', { idCode }); } catch {}
-        this.router.navigate([`/events/home-guest/${idCode}`]);
+        try { console.log('[CHECKIN][Destino] Erro ao carregar /events/:id_code. Navegando home-guest-v2 com id_code', { idCode }); } catch {}
+        this.router.navigate([`/events/home-guest-v2/${idCode}`]);
       }
     });
   }

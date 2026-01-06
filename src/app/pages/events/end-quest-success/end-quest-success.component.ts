@@ -19,9 +19,9 @@ export class EndQuestSuccessComponent {
     try { this.idCode = this.route.snapshot.queryParamMap.get('id_code') || ''; } catch {}
     setTimeout(() => {
       if (this.idCode) {
-        try { this.router.navigate([`/events/home-guest/${this.idCode}`]); } catch {}
+        try { this.router.navigate([`/events/home-guest-v2/${this.idCode}`]); } catch {}
       } else {
-        try { this.router.navigateByUrl('/events/home-guest'); } catch {}
+        try { this.router.navigateByUrl('/events/home-guest-v2'); } catch {}
       }
     }, 3000);
   }

@@ -311,28 +311,28 @@ export const routes: Routes = [
         component:HomeAdminComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Angular Pub Admin | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Admin | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/master',
         component:HomeMasterComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['master'] },
-        title:'Angular Pub Master | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Master | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/user',
         component:HomeUserComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['user'] },
-        title:'Angular Pub User | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions User | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/waiter',
         component:HomeWaiterComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Angular Pub Waiter | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Waiter | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/waiter/scan-qr',
@@ -346,77 +346,77 @@ export const routes: Routes = [
         component:OrdersComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Angular Pub Pedidos | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Pedidos | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/waiter/menu',
         component:MenuComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Angular Pub Cardápio | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Cardápio | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/waiter/tables',
         component:TablesComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Angular Pub Mesas | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Mesas | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/waiter/payments',
         component:PaymentsComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['waiter'] },
-        title:'Angular Pub Pagamentos | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Pagamentos | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/admin/admin-dashboard',
         component:AdminDashboardComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Angular Pub Dashboard Admin | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Dashboard Admin | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/admin/product-list',
         component:AdminProductListComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Angular Pub Lista de Produtos | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Lista de Produtos | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/admin/add-product',
         component:AdminAddProductComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Angular Pub Cadastro de Produto | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Cadastro de Produto | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/admin/config',
         component:ConfigComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Angular Pub Configurações | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Configurações | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/admin/clients',
         component:ClientsComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Angular Pub Clientes | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Clientes | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/admin/waiters',
         component:WaitersComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Angular Pub Garçons | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Garçons | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'pub/admin/tables',
         component:AdminTablesComponent,
         canActivate: [AuthGuard, RoleGuard],
         data: { expectedRoles: ['admin'] },
-        title:'Angular Pub Mesas | BeerClubPub - Angular Admin Dashboard Template'
+        title:'Vibe Sessions Mesas | BeerClubPub - Angular Admin Dashboard Template'
       },
       {
         path:'stream',

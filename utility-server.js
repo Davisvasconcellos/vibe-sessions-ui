@@ -530,7 +530,7 @@ function buildRichPdfHTML({
           <img class="shape-bottom" src="${gridUrl}" alt="grid" />
           <div class="hero" style="z-index:1;">
             <img class="logo" src="${logoUrl}" alt="Logo" width="231" height="48" />
-            <p class="strap">Free and Open-Source Tailwind CSS Admin Dashboard Template</p>
+            <p class="strap">Vibe Sessions </p>
           </div>
         </section>
       </div>

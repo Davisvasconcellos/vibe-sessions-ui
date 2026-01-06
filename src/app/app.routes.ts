@@ -20,6 +20,7 @@ import { FaqsComponent } from './pages/faqs/faqs.component';
 import { BlankComponent } from './pages/blank/blank.component';
 import { NotFoundComponent } from './pages/other-page/not-found/not-found.component';
 import { AppLayoutComponent } from './shared/layout/app-layout/app-layout.component';
+import { AppHeaderLayoutComponent } from './shared/layout/app-header-layout/app-header-layout.component';
 import { Error500Component } from './pages/other-page/error-500/error-500.component';
 import { Error503Component } from './pages/other-page/error-503/error-503.component';
 import { ComingSoonComponent } from './pages/other-page/coming-soon/coming-soon.component';
@@ -118,6 +119,18 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/events/checkin/checkin.component').then(m => m.CheckinComponent),
     canActivate: [AuthGuard],
     title: 'Check-in do Evento'
+  },
+  {
+    path: 'events/home-default',
+    component: AppHeaderLayoutComponent,
+    canActivate: [AuthGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/events/home-default/home-default.component').then(m => m.HomeDefaultComponent),
+        title: 'Home Default'
+      }
+    ]
   },
   {
     path:'',

@@ -106,10 +106,10 @@ export class SigninFormComponent implements OnInit {
               this.router.navigate(['/pub/waiter']);
               break;
             case 'customer':
-              this.router.navigate(['/pub/user']); // Customer usa home-user
+              this.router.navigate(['/events/home-default']); // Customer usa home-default
               break;
             case 'manager':
-              this.router.navigate(['/pub/user']); // Manager também usa home-user por enquanto
+              this.router.navigate(['/events/home-default']); // Manager usa home-default
               break;
             default:
               this.router.navigate(['/']);
@@ -169,7 +169,7 @@ export class SigninFormComponent implements OnInit {
                 break;
               case 'customer':
               case 'manager':
-                this.router.navigate(['/pub/user']);
+                this.router.navigate(['/events/home-default']);
                 break;
               default:
                 this.router.navigate(['/']);

@@ -36,11 +36,12 @@ export class GuestGuard implements CanActivate {
 
   private redirectToUserHome(role: string): void {
     const roleRoutes: { [key: string]: string } = {
-      'admin': '/home-admin',
-      'master': '/home-master',
-      'manager': '/home-manager',
-      'waiter': '/home-waiter',
-      'customer': '/home-customer'
+      'admin': '/pub/admin',
+      'master': '/pub/master',
+      'manager': '/events/home-default',
+      'waiter': '/pub/waiter',
+      'customer': '/events/home-default',
+      'user': '/events/home-default'
     };
 
     const redirectRoute = roleRoutes[role] || '/dashboard';

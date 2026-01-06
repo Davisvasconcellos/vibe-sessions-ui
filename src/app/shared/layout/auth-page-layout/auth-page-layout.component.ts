@@ -33,7 +33,7 @@ export class AuthPageLayoutComponent {
           break;
         case 'manager':
         case 'user':
-          this.roleHomeLink = '/pub/user';
+          this.roleHomeLink = '/events/home-default';
           break;
         default:
           this.roleHomeLink = '/';

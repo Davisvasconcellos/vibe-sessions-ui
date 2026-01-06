@@ -1,5 +1,5 @@
 // AppHeaderComponent
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild, Input } from '@angular/core';
 import { SidebarService } from '../../services/sidebar.service';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
@@ -30,6 +30,8 @@ export class AppHeaderComponent {
   roleHomeLink: string = '/';
 
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
+
+  @Input() showSidebarToggle = true;
 
   currentLang: 'pt-br' | 'en' = 'pt-br';
 
@@ -68,7 +70,7 @@ export class AppHeaderComponent {
           break;
         case 'manager':
         case 'user':
-          this.roleHomeLink = '/pub/user';
+          this.roleHomeLink = '/events/home-default';
           break;
         default:
           this.roleHomeLink = '/';

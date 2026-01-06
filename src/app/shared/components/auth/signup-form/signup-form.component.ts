@@ -134,12 +134,12 @@ export class SignupFormComponent implements OnInit {
 
           // Caso contrário, redirecionar baseado no papel
           const userRole = response.data.user.role;
-          if (userRole === 'admin' || userRole === 'master' || userRole === 'manager') {
+          if (userRole === 'admin' || userRole === 'master') {
             this.router.navigate(['/pub/admin']);
           } else if (userRole === 'waiter') {
             this.router.navigate(['/pub/waiter']);
           } else {
-            this.router.navigate(['/pub/user']);
+            this.router.navigate(['/events/home-default']);
           }
         }
       },

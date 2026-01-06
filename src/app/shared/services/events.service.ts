@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { AuthService, User } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface EventApi {
   id: number;
@@ -12,9 +13,13 @@ export interface EventApi {
   description?: string;
   start_date?: string;
   end_date?: string;
+  start_datetime?: string;
+  end_datetime?: string;
   startDate?: string;
   endDate?: string;
   image_url?: string;
+  banner_url?: string;
+  image?: string;
   created_by?: string;
   slug?: string;
   status?: string;
@@ -22,7 +27,7 @@ export interface EventApi {
 
 @Injectable({ providedIn: 'root' })
 export class EventsService {
-  private readonly API_BASE_URL = '/api/v1';
+  private readonly API_BASE_URL = `${environment.apiUrl}/api/v1`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -92,12 +97,14 @@ export class EventsService {
       query.created_by = String(params.created_by);
     }
 
-    return this.http.get<any>(`${this.API_BASE_URL}/events/public`, { headers, params: query }).pipe(
+    return this.http.get<any>(`${environment.apiUrl}/api/events/public`, { headers, params: query }).pipe(
       map((res: any) => {
         const list: EventApi[] = Array.isArray(res)
           ? (res as EventApi[])
           : Array.isArray(res?.data)
           ? (res.data as EventApi[])
+          : Array.isArray(res?.data?.events) // Add support for { data: { events: [] } } format
+          ? (res.data.events as EventApi[])
           : [];
         // Se o backend não filtrar por created_by, aplica filtro no cliente
         return params.created_by

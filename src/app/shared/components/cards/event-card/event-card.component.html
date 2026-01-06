@@ -16,6 +16,7 @@
         <app-badge color="info" size="sm">{{ endDate }}</app-badge>
       </div>
         <div class="mt-4 flex gap-2 justify-end">
+        <ng-container *ngIf="!isPublic">
           <button (click)="onViewLinksClick()"
                   class="inline-flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-lg shadow-theme-xs bg-blue-500 text-white hover:bg-blue-600">
             Links
@@ -24,7 +25,14 @@
                   class="inline-flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-lg shadow-theme-xs bg-yellow-500 text-white hover:bg-yellow-600">
             Editar
           </button>
-        </div>
+        </ng-container>
+        <ng-container *ngIf="isPublic">
+          <button (click)="onActionClick()"
+                  class="inline-flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-lg shadow-theme-xs bg-brand-500 text-white hover:bg-brand-600">
+            {{ actionLabel }}
+          </button>
+        </ng-container>
+      </div>
     </div>
   </div>
 </app-card>

@@ -1,13 +1,35 @@
 <div>
   <div class="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
-    <div class="mx-auto w-full max-w-[630px] text-center">
+    <div class="w-full">
       <h3 class="mb-4 font-semibold text-gray-800 text-theme-xl dark:text-white/90 sm:text-2xl">
-        Bem-vindo!
+        Eventos Disponíveis
       </h3>
 
-      <p class="text-sm text-gray-500 dark:text-gray-400 sm:text-base">
-        Esta é a página inicial padrão. Você não selecionou nenhum evento específico.
-      </p>
+      <div *ngIf="isLoading" class="flex justify-center py-8">
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-solid border-brand-500 border-t-transparent"></div>
+      </div>
+
+      <div *ngIf="errorMessage" class="rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/50 dark:text-red-300">
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="!isLoading && !errorMessage && publicEvents.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+        Nenhum evento público disponível no momento.
+      </div>
+
+      <div *ngIf="!isLoading && publicEvents.length > 0" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <app-event-card
+          *ngFor="let event of publicEvents"
+          [eventName]="event.name || event.title || ''"
+           [description]="event.description || ''"
+           [startDate]="formatDate(event.start_datetime || event.start_date || event.startDate)"
+           [endDate]="formatDate(event.end_datetime || event.end_date || event.endDate)"
+           [image]="event.banner_url || event.image_url || event.image || '/images/cards/card-01.png'"
+           [isPublic]="true"
+           actionLabel="Fazer Check-in"
+           (actionClick)="openEvent(event)"
+        ></app-event-card>
+      </div>
     </div>
   </div>
 </div>

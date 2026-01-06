@@ -27,14 +27,25 @@ export class EventCardComponent {
   @Input() endDate: string = '';
   @Input() image: string = '/images/cards/card-01.png';
   @Input() links: { text: string; url: string; variant: 'primary' | 'outline' | 'info' | 'warning' }[] = [];
+  @Input() isPublic: boolean = false;
+  @Input() actionLabel: string = 'Ver Detalhes';
   @Output() viewLinks = new EventEmitter<void>();
   @Output() editEvent = new EventEmitter<void>();
+  @Output() actionClick = new EventEmitter<void>();
 
   onViewLinksClick() {
     this.viewLinks.emit();
   }
 
   onEditClick() {
-    this.editEvent.emit();
+    if (this.isPublic) {
+      this.actionClick.emit();
+    } else {
+      this.editEvent.emit();
+    }
+  }
+  
+  onActionClick() {
+    this.actionClick.emit();
   }
 }

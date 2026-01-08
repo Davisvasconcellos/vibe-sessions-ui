@@ -92,6 +92,11 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   isStandalone = false;
   isFullscreen = false;
 
+  // Auto-advance for Standalone Mode
+  autoAdvanceProgress = 0;
+  autoAdvanceTimer: any;
+  readonly AUTO_ADVANCE_DURATION = 10000; // 10 seconds
+
   getFirstName(fullName: string | undefined | null): string {
     if (!fullName) return '';
     return fullName.split(' ')[0];
@@ -122,6 +127,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
       const standaloneParam = qp.get('standalone') || '';
       this.isStandalone = standaloneParam === '1' || standaloneParam === 'true';
       if (this.isStandalone || viewParam === 'playlist') this.viewMode = 'playlist';
+      if (this.isStandalone) this.startAutoAdvance();
 
       try {
         document.addEventListener('fullscreenchange', () => {
@@ -181,6 +187,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopAutoAdvance();
     if (this.tickHandle) clearInterval(this.tickHandle);
     const ids = Object.keys(this.esMap);
     ids.forEach(id => {
@@ -471,16 +478,34 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   }
 
   getInstrumentType(instrument: string): string {
-    const norm = (instrument || '').toLowerCase();
-    if (norm.includes('vocal') || norm.includes('voz') || norm.includes('mic')) return 'vocal';
-    if (norm.includes('teclado') || norm.includes('piano') || norm.includes('keys')) return 'keys';
-    if (norm.includes('bateria') || norm.includes('drums')) return 'drums';
-    if (norm.includes('baixo') || norm.includes('bass')) return 'bass';
-    if (norm.includes('guitarra')) return 'electric-guitar';
-    if (norm.includes('violão') || norm.includes('acoustic')) return 'acoustic-guitar';
-    if (norm.includes('metais') || norm.includes('horns') || norm.includes('trumpet')) return 'horns';
-    if (norm.includes('percussão') || norm.includes('conga') || norm.includes('pandeiro')) return 'percussion';
-    return 'other';
+    const norm = (instrument || '').toLowerCase().trim();
+
+    // 1. Voz
+    if (norm.includes('voz') || norm.includes('vocal') || norm.includes('cantor') || norm.includes('mic')) return 'voz';
+    
+    // 2. Guitarra
+    if (norm.includes('guitarra') || norm.includes('guitar') || norm.includes('violão') || norm.includes('acoustic')) return 'guitarra';
+    
+    // 3. Baixo
+    if (norm.includes('baixo') || norm.includes('bass')) return 'baixo';
+    
+    // 4. Teclado
+    if (norm.includes('teclado') || norm.includes('piano') || norm.includes('key') || norm.includes('synth') || norm.includes('orgão')) return 'teclado';
+    
+    // 5. Bateria
+    if (norm.includes('bateria') || norm.includes('drum') || norm.includes('batera')) return 'bateria';
+    
+    // 6. Metais
+    if (norm.includes('metais') || norm.includes('horn') || norm.includes('sax') || norm.includes('trompete') || norm.includes('trombone') || norm.includes('flauta') || norm.includes('wind')) return 'metais';
+    
+    // 7. Percussão
+    if (norm.includes('percussão') || norm.includes('percussao') || norm.includes('percussion') || norm.includes('conga') || norm.includes('cajon') || norm.includes('pandeiro')) return 'percussao';
+    
+    // 8. Cordas
+    if (norm.includes('cordas') || norm.includes('string') || norm.includes('violino') || norm.includes('cello') || norm.includes('viola')) return 'cordas';
+
+    // 9. Outro (Default)
+    return 'outro';
   }
 
   onImageError(event: any) {
@@ -522,7 +547,19 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     if (!this.eventIdCode) return;
     this.eventService.getEventPlaylist(this.eventIdCode).subscribe({
       next: (data) => {
-        this.playlistSongs = Array.isArray(data) ? data : [];
+        const newSongs = Array.isArray(data) ? data : [];
+
+        // Check for equality to avoid resetting cycle if data is same
+        if (this.arePlaylistsEqual(this.playlistSongs, newSongs)) {
+            return;
+        }
+
+        this.playlistSongs = newSongs;
+
+        // Reset cycle if data changed
+        if (this.isStandalone) {
+             this.autoAdvanceProgress = 0;
+        }
 
         // 1. Identificar a música que está NO PALCO agora (vindo do servidor)
         const onStageIndex = this.playlistSongs.findIndex((s: any) => String(s?.status || '') === 'on_stage');
@@ -557,6 +594,52 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
         console.error('Error loading playlist', err);
       }
     });
+  }
+
+  arePlaylistsEqual(a: any[], b: any[]): boolean {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i].id !== b[i].id) return false;
+        if (a[i].status !== b[i].status) return false;
+        // Check musicians length as proxy for lineup change
+        if ((a[i].musicians?.length || 0) !== (b[i].musicians?.length || 0)) return false;
+    }
+    return true;
+  }
+
+  startAutoAdvance(): void {
+    if (this.autoAdvanceTimer) return;
+    this.autoAdvanceTimer = setInterval(() => {
+      if (this.viewMode !== 'playlist' || !this.isStandalone) return;
+      
+      this.autoAdvanceProgress += 1; // 100ms interval, 100 steps = 10000ms (10s)
+      
+      if (this.autoAdvanceProgress >= 100) {
+        this.advanceSlideshow();
+        this.autoAdvanceProgress = 0;
+      }
+    }, 100);
+  }
+
+  stopAutoAdvance(): void {
+    if (this.autoAdvanceTimer) {
+      clearInterval(this.autoAdvanceTimer);
+      this.autoAdvanceTimer = null;
+    }
+  }
+
+  advanceSlideshow(): void {
+    if (!Array.isArray(this.playlistSongs) || this.playlistSongs.length === 0) return;
+    
+    // Loop behavior: if at end, go to start
+    let nextIndex = this.selectedPlaylistIndex + 1;
+    if (nextIndex >= this.playlistSongs.length) {
+        nextIndex = 0;
+    }
+    this.selectedPlaylistIndex = nextIndex;
+    this.triggerFooterAnimation();
   }
 
   private triggerFooterAnimation(): void {

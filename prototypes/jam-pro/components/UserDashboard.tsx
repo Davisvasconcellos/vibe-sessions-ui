@@ -246,10 +246,10 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ currentSong, userQueue })
           </div>
         </section>
 
-        {/* 3 - DRAFTS DISPONÍVEIS */}
+        {/* 3 - DISPONÍVEIS */}
         <section>
           <div className="flex justify-between items-end mb-4">
-            <h2 className="text-gray-400 font-oswald font-bold uppercase tracking-widest text-[10px]">DRAFTS DISPONÍVEIS</h2>
+            <h2 className="text-gray-400 font-oswald font-bold uppercase tracking-widest text-[10px]">DISPONÍVEIS</h2>
             <span className="text-blue-500 font-black text-[9px] uppercase tracking-widest cursor-pointer hover:underline">VER TODOS</span>
           </div>
           <div className="grid grid-cols-1 gap-4">

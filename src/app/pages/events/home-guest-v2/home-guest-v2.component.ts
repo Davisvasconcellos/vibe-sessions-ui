@@ -95,7 +95,11 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
   // Auto-advance for Standalone Mode
   autoAdvanceProgress = 0;
   autoAdvanceTimer: any;
-  readonly AUTO_ADVANCE_DURATION = 10000; // 10 seconds
+  
+  // Auto-advance Configuration
+  readonly FIRST_SLIDE_DURATION = 20000; // 20 seconds for the first slide
+  readonly DEFAULT_SLIDE_DURATION = 10000; // 10 seconds for others
+  readonly TIMER_INTERVAL = 100; // 100ms check
 
   getFirstName(fullName: string | undefined | null): string {
     if (!fullName) return '';
@@ -614,13 +618,22 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     this.autoAdvanceTimer = setInterval(() => {
       if (this.viewMode !== 'playlist' || !this.isStandalone) return;
       
-      this.autoAdvanceProgress += 1; // 100ms interval, 100 steps = 10000ms (10s)
+      // Determine duration based on current slide
+      const currentDuration = this.selectedPlaylistIndex === 0 
+        ? this.FIRST_SLIDE_DURATION 
+        : this.DEFAULT_SLIDE_DURATION;
+        
+      // Calculate increment to reach 100% over the duration
+      const steps = currentDuration / this.TIMER_INTERVAL;
+      const increment = 100 / steps;
+      
+      this.autoAdvanceProgress += increment;
       
       if (this.autoAdvanceProgress >= 100) {
         this.advanceSlideshow();
         this.autoAdvanceProgress = 0;
       }
-    }, 100);
+    }, this.TIMER_INTERVAL);
   }
 
   stopAutoAdvance(): void {

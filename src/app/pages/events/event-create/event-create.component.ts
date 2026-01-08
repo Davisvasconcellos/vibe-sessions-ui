@@ -301,11 +301,15 @@ export class EventCreateComponent {
           }
           // Se houver arquivo selecionado, faz upload e atualiza banner_url no evento criado
           if (this.imageFile && idCode) {
+            const slugName = this.slugify(name);
+            const folderPath = `events/${idCode}_${slugName}`;
+            
             const upload = await this.imageUploadService.uploadImage(
               this.imageFile,
               'event-banner',
               idCode,
-              { maxWidth: 1200, maxHeight: 800, quality: 0.9, format: 'jpeg' }
+              { maxWidth: 1200, maxHeight: 800, quality: 0.9, format: 'jpeg' },
+              folderPath
             );
             if (upload.success && upload.filePath) {
               await this.eventService.updateEvent(idCode, { banner_url: upload.filePath }).toPromise();

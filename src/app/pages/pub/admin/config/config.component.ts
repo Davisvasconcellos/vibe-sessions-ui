@@ -366,11 +366,17 @@ export class ConfigComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Usando o novo método genérico do ImageUploadService
-    this.imageUploadService.uploadImage(file, 'store-logo', selectedStore.id_code, {
-      maxWidth: 300, // Exemplo de opções customizadas
-      maxHeight: 300,
-      quality: 0.9
-    }).then(result => {
+    this.imageUploadService.uploadImage(
+      file, 
+      'store-logo', 
+      selectedStore.id_code, 
+      {
+        maxWidth: 300, // Exemplo de opções customizadas
+        maxHeight: 300,
+        quality: 0.9
+      },
+      `stores/${selectedStore.id_code}/branding`
+    ).then(result => {
       if (result.success && result.filePath) {
         console.log('✅ Upload do logo bem-sucedido, novo caminho:', result.filePath);
         // A URL da imagem foi salva no banco pelo ImageUploadService.

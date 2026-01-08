@@ -46,10 +46,12 @@ export class ImageUploadService {
     file: File,
     type: string,
     entityId: string,
-    options?: ImageProcessingOptions
+    options?: ImageProcessingOptions,
+    folder?: string
   ): Promise<UploadResult> {
     try {
-      console.log(`🚀 Iniciando upload do tipo "${type}":`, file.name);
+      console.log(`🚀 [DEBUG-${Date.now()}] Iniciando upload do tipo "${type}":`, file.name);
+      console.log(`📂 [DEBUG] Folder solicitado: "${folder}"`);
       
       // Validar arquivo
       const validation = this.validateFile(file);
@@ -63,7 +65,7 @@ export class ImageUploadService {
       const processedBlob = await this.processImage(file, processingOptions);
       
       // Fazer upload para o servidor
-      const result = await this._uploadToServer(processedBlob, file.name, type, entityId);
+      const result = await this._uploadToServer(processedBlob, file.name, type, entityId, folder);
       
       console.log('✅ Upload concluído com sucesso:', result.fileName);
       console.log('📁 Arquivo salvo em:', result.filePath);
@@ -117,7 +119,13 @@ export class ImageUploadService {
     }
 
     // Chama o método genérico
-    const result = await this.uploadImage(file, 'user-avatar', user.id_code, this.defaultOptions);
+    const result = await this.uploadImage(
+      file, 
+      'user-avatar', 
+      user.id_code, 
+      this.defaultOptions,
+      `users/${user.id_code}/avatar`
+    );
 
     if (result.success && result.filePath) {
       // Atualiza o avatar do usuário na API principal
@@ -233,7 +241,8 @@ export class ImageUploadService {
     blob: Blob,
     fileName: string,
     type: string,
-    entityId: string
+    entityId: string,
+    folderPath?: string
   ): Promise<UploadResult> {
     try {
       // Criar FormData para enviar o arquivo
@@ -243,15 +252,22 @@ export class ImageUploadService {
       formData.append('type', type);
       formData.append('entityId', entityId);
       
-      let folder: string | undefined;
-      const t = (type || '').toLowerCase();
-      if (t.includes('event')) folder = 'events';
-      else if (t.startsWith('store')) folder = 'stores';
-      else if (t.includes('user')) folder = 'users';
-      
-      if (folder) formData.append('folder', folder);
+      // Determinar pasta
+      let folderToSend = folderPath;
 
-      console.log(`📤 Enviando arquivo para API principal (tipo: ${type}):`, fileName);
+      if (!folderToSend) {
+        // Fallback: Lógica baseada no tipo (compatibilidade)
+        const t = (type || '').toLowerCase();
+        if (t.includes('event')) folderToSend = 'events';
+        else if (t.startsWith('store')) folderToSend = 'stores';
+        else if (t.includes('user')) folderToSend = 'users';
+        console.log(`⚠️ [DEBUG] Folder não informado. Fallback automático para: "${folderToSend}"`);
+      }
+      
+      if (folderToSend) formData.append('folder', folderToSend);
+
+      console.log(`📤 [DEBUG] Enviando arquivo para API principal (tipo: ${type}):`, fileName);
+      console.log(`📂 [DEBUG] Pasta FINAL enviada no FormData: "${folderToSend}"`);
 
       // Endpoint na API principal
       const response = await this.http.post<any>(`${this.API_BASE_URL}/api/v1/uploads`, formData).toPromise();

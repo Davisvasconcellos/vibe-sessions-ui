@@ -327,7 +327,16 @@ export class CheckinComponent implements OnInit, OnDestroy {
       }
       const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
       try {
-        const res = await this.imageUploadService.uploadImage(file, 'event-selfie', this.idCode);
+        const slugName = this.slugify(this.eventName);
+        const folderPath = `events/${this.idCode}_${slugName}/guests`;
+        
+        const res = await this.imageUploadService.uploadImage(
+          file,
+          'event-selfie',
+          this.idCode,
+          undefined,
+          folderPath
+        );
         if (res.success && res.filePath) {
           console.log('[CHECKIN][Selfie] URL recebida do novo método:', res.filePath);
           this.selfieUrl = res.filePath;
@@ -341,5 +350,15 @@ export class CheckinComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     }, 'image/jpeg', 0.9);
+  }
+
+  private slugify(text: string): string {
+    return (text || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .trim();
   }
 }

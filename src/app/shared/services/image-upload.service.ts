@@ -28,7 +28,7 @@ export class ImageUploadService {
     format: 'jpeg'
   };
 
-  private readonly utilityServerUrl = environment.utilityUrl; // Frontend Utility Server
+  private readonly API_BASE_URL = environment.apiUrl; // API Principal
 
   constructor(
     private authService: AuthService,
@@ -239,30 +239,32 @@ export class ImageUploadService {
       // Criar FormData para enviar o arquivo
       const formData = new FormData();
       const file = new File([blob], fileName, { type: blob.type });
-      formData.append('image', file); // Campo genérico 'image'
+      formData.append('file', file); // API espera 'file'
       formData.append('type', type);
       formData.append('entityId', entityId);
-      // Definir a pasta de destino de acordo com o tipo
-      // utility-server aceita 'folder' para escolher subpasta em /images
+      
       let folder: string | undefined;
       const t = (type || '').toLowerCase();
-      if (t.includes('event')) {
-        folder = 'events';
-      } else if (t.startsWith('store')) {
-        folder = 'stores';
-      } else if (t.includes('user')) {
-        folder = 'user';
-      }
-      if (folder) {
-        formData.append('folder', folder);
-      }
+      if (t.includes('event')) folder = 'events';
+      else if (t.startsWith('store')) folder = 'stores';
+      else if (t.includes('user')) folder = 'users';
+      
+      if (folder) formData.append('folder', folder);
 
-      console.log(`📤 Enviando arquivo para o servidor (tipo: ${type}):`, fileName);
+      console.log(`📤 Enviando arquivo para API principal (tipo: ${type}):`, fileName);
 
-      const response = await this.http.post<any>(`${this.utilityServerUrl}/upload/image`, formData).toPromise();
+      // Endpoint na API principal
+      const response = await this.http.post<any>(`${this.API_BASE_URL}/api/v1/uploads`, formData).toPromise();
 
       if (response.success) {
-        return { success: true, fileName: response.filename, filePath: response.url };
+        // A API agora retorna a URL pronta para uso (proxy ou direta)
+        const finalUrl = response.data.url || response.data.downloadUrl || response.data.fileUrl;
+        
+        return {
+          success: true,
+          fileName: response.data.name || fileName,
+          filePath: finalUrl
+        };
       } else {
         return { success: false, error: response.message || 'Erro no upload' };
       }
@@ -274,27 +276,12 @@ export class ImageUploadService {
   }
 
   /**
-   * Prepara a estrutura de pastas do evento no servidor de utilidades.
-   * Cria `images/events/<id_code>/`, com subpastas `gallery` e `guests`.
+   * Prepara a estrutura de pastas do evento.
+   * Na nova API com Google Drive, as pastas são gerenciadas automaticamente.
+   * Mantido para compatibilidade.
    */
   async prepareEventFolders(idCode: string): Promise<{ success: boolean; paths?: any; error?: string }> {
-    try {
-      if (!idCode) {
-        return { success: false, error: 'id_code inválido para preparar pastas.' };
-      }
-
-      const response = await this.http
-        .post<any>(`${this.utilityServerUrl}/events/prepare`, { id_code: idCode })
-        .toPromise();
-
-      if (response?.success) {
-        return { success: true, paths: response.paths };
-      }
-      return { success: false, error: response?.message || 'Falha ao preparar pastas do evento.' };
-    } catch (error) {
-      console.warn('Aviso: falha ao preparar pastas do evento:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Erro desconhecido' };
-    }
+    return Promise.resolve({ success: true });
   }
 
   /**

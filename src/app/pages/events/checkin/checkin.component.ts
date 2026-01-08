@@ -329,6 +329,7 @@ export class CheckinComponent implements OnInit, OnDestroy {
       try {
         const res = await this.imageUploadService.uploadImage(file, 'event-selfie', this.idCode);
         if (res.success && res.filePath) {
+          console.log('[CHECKIN][Selfie] URL recebida do novo método:', res.filePath);
           this.selfieUrl = res.filePath;
         } else {
           this.submitError = res.error || 'Falha ao enviar selfie.';

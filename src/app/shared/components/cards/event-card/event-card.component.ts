@@ -25,7 +25,34 @@ export class EventCardComponent {
   @Input() description: string = '';
   @Input() startDate: string = '';
   @Input() endDate: string = '';
-  @Input() image: string = '/images/cards/card-01.png';
+  private _image: string = '/images/cards/card-01.png';
+
+  @Input() 
+  set image(value: string | undefined | null) {
+    this._image = this.normalizeImageUrl(value);
+  }
+
+  get image(): string {
+    return this._image;
+  }
+
+  private normalizeImageUrl(url: string | undefined | null): string {
+    if (!url) return '/images/cards/card-01.png';
+    
+    let clean = url.trim().replace(/[`'\\\"]/g, '');
+
+    // Se for URL completa (http/https), retorna direto
+    if (/^https?:\/\//.test(clean)) {
+      return clean;
+    }
+
+    // Se vier apenas o nome do arquivo ou caminho relativo
+    if (!clean.startsWith('/')) {
+      clean = `/images/cards/${clean}`;
+    }
+    
+    return clean;
+  }
   @Input() links: { text: string; url: string; variant: 'primary' | 'outline' | 'info' | 'warning' }[] = [];
   @Input() isPublic: boolean = false;
   @Input() actionLabel: string = 'Ver Detalhes';

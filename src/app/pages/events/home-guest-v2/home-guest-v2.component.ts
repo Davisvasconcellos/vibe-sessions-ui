@@ -99,7 +99,7 @@ export class HomeGuestV2Component implements OnInit, OnDestroy {
     private injector: Injector,
     private envInjector: EnvironmentInjector
   ) {
-    this.useSse = true;
+    this.useSse = false;
   }
 
   ngOnInit(): void {

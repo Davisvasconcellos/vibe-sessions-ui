@@ -63,12 +63,26 @@
               <div class="max-w-4xl mx-auto space-y-10">
 
                 <!-- 1 - NO PALCO AGORA -->
-                <section *ngIf="currentSong">
-                  <div class="flex items-center gap-2 mb-4">
-                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></span>
-                    <h2 class="text-gray-400 font-oswald font-bold uppercase tracking-widest text-[10px]">NO PALCO AGORA</h2>
+                <section>
+                  <div class="flex justify-between items-center mb-4 min-h-[1.5rem]">
+                    <!-- Header Left (Visible only if song exists) -->
+                    <div *ngIf="currentSong" class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></span>
+                      <h2 class="text-gray-400 font-oswald font-bold uppercase tracking-widest text-[10px]">NO PALCO AGORA</h2>
+                    </div>
+                    <div *ngIf="!currentSong"></div>
+
+                    <!-- Refresh Button (Always Visible) -->
+                    <button (click)="loadJams()"
+                            class="group flex items-center gap-2 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-500/40 rounded-full transition-all active:scale-95">
+                      <svg class="w-3 h-3 text-blue-500 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span class="text-blue-500 font-bold text-[9px] uppercase tracking-widest">Atualizar</span>
+                    </button>
                   </div>
-                  <div class="bg-[#121212] rounded-xl p-6 border-l-[6px] border-emerald-500 shadow-2xl relative overflow-hidden">
+
+                  <div *ngIf="currentSong" class="bg-[#121212] rounded-xl p-6 border-l-[6px] border-emerald-500 shadow-2xl relative overflow-hidden">
                     <div class="relative z-10">
                       <h3 class="text-white font-oswald font-black italic text-4xl uppercase tracking-tighter leading-tight">
                         {{ currentSong.title }}
@@ -124,7 +138,6 @@
                 <section>
                   <div class="flex justify-between items-end mb-4">
                     <h2 class="text-gray-400 font-oswald font-bold uppercase tracking-widest text-[10px]">DRAFTS DISPONÍVEIS</h2>
-                    <span class="text-blue-500 font-black text-[9px] uppercase tracking-widest cursor-pointer hover:underline" (click)="loadJams()">ATUALIZAR</span>
                   </div>
                   <div class="grid grid-cols-1 gap-4" [@listAnimation]="plannedSongs.length">
                     <div *ngFor="let song of plannedSongs"

@@ -3,9 +3,13 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FinancialService } from '../../financial.service';
-import { ContaPagar, StatusConta } from '../../models/conta-pagar';
+import { FinancialToastService } from '../../financial-toast.service';
+import { ContaPagar, StatusConta, TransactionsSummary } from '../../models/conta-pagar';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
 import { Store } from '../../../pages/pub/admin/home-admin/store.service';
+import { PopoverComponent } from '../../../shared/components/ui/popover/popover/popover.component';
+import { ButtonComponent } from '../../../shared/components/ui/button/button.component';
+import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
 
 // Material Imports
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -24,7 +28,10 @@ import { MatInputModule } from '@angular/material/input';
     MatDatepickerModule,
     MatNativeDateModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    PopoverComponent,
+    ButtonComponent,
+    ModalComponent
   ],
   templateUrl: './lancamentos-list.component.html',
 })
@@ -79,11 +86,18 @@ export class LancamentosListComponent implements OnInit {
   isEvidenceSidebarOpen = false;
   selectedTransaction: ContaPagar | null = null;
   selectedEvidenceItems: { name: string; url?: string; type: 'image' | 'pdf' | 'file'; extension?: string }[] = [];
+  isDeleteModalOpen = false;
+  transactionToDelete: ContaPagar | null = null;
   
   private readonly STORE_KEY = 'selectedStore';
   selectedStore: Store | null = null;
 
+  summary: TransactionsSummary | null = null;
+
   isFormVisible = false;
+
+  formMode: 'create' | 'edit' | 'pay' | 'cancel' | 'delete' = 'create';
+  editingTransaction: ContaPagar | null = null;
 
   statusLabelMap: Record<StatusConta, string> = {
     pending: 'Pendente',
@@ -101,24 +115,54 @@ export class LancamentosListComponent implements OnInit {
   }
 
   get totalPayablePending(): number {
+    if (this.summary?.payable?.pending != null) {
+      return this.summary.payable.pending;
+    }
     return this.allData
       .filter(t => t.type === 'PAYABLE' && t.status === 'pending')
       .reduce((acc, t) => acc + t.amount, 0);
   }
 
   get totalReceivablePending(): number {
+    if (this.summary?.receivable?.pending != null) {
+      return this.summary.receivable.pending;
+    }
     return this.allData
       .filter(t => t.type === 'RECEIVABLE' && t.status === 'pending')
       .reduce((acc, t) => acc + t.amount, 0);
   }
 
+  get totalPayablePaid(): number {
+    if (this.summary?.payable?.paid != null) {
+      return this.summary.payable.paid;
+    }
+    return this.allData
+      .filter(t => t.type === 'PAYABLE' && t.status === 'paid')
+      .reduce((acc, t) => acc + t.amount, 0);
+  }
+
+  get totalReceivablePaid(): number {
+    if (this.summary?.receivable?.paid != null) {
+      return this.summary.receivable.paid;
+    }
+    return this.allData
+      .filter(t => t.type === 'RECEIVABLE' && t.status === 'paid')
+      .reduce((acc, t) => acc + t.amount, 0);
+  }
+
   get totalOverdue(): number {
+    if (this.summary?.overdue != null) {
+      return this.summary.overdue;
+    }
     return this.allData
       .filter(t => t.status === 'overdue')
       .reduce((acc, t) => acc + t.amount, 0);
   }
 
   get totalPaid(): number {
+    if (this.summary?.total_paid != null) {
+      return this.summary.total_paid;
+    }
     return this.allData
       .filter(t => t.status === 'paid')
       .reduce((acc, t) => acc + t.amount, 0);
@@ -128,9 +172,42 @@ export class LancamentosListComponent implements OnInit {
     private financial: FinancialService, 
     private fb: FormBuilder, 
     private cdr: ChangeDetectorRef,
-    private localStorageService: LocalStorageService
+    private localStorageService: LocalStorageService,
+    private toastService: FinancialToastService
   ) {
     this.initForm();
+  }
+
+  private loadTransactions() {
+    if (!this.selectedStore || !this.selectedStore.id_code) {
+      this.allData = [];
+      this.paginatedData = [];
+      this.totalItems = 0;
+      this.totalPages = 1;
+      this.summary = null;
+      return;
+    }
+
+    // Carrega "tudo" (limite alto) para permitir filtro no front
+    // e mantém os KPIs globais (independentes dos filtros da listagem)
+    this.financial.getContasPagar(this.selectedStore.id_code, 1, 1000, false).subscribe({
+      next: (result) => {
+        const rows = result.transactions || [];
+        this.allData = this.normalizeRows(rows);
+        this.summary = result.summary || null;
+        
+        // Atualiza paginação com os dados carregados
+        this.updatePagination();
+      },
+      error: (err) => {
+        console.error('Erro ao buscar lançamentos', err);
+        this.allData = [];
+        this.paginatedData = [];
+        this.totalItems = 0;
+        this.totalPages = 1;
+        this.summary = null;
+      }
+    });
   }
 
   initForm() {
@@ -202,6 +279,34 @@ export class LancamentosListComponent implements OnInit {
 
   toggleForm() {
     this.isFormVisible = !this.isFormVisible;
+
+    if (this.isFormVisible && this.transactionForm) {
+      this.formMode = 'create';
+      this.editingTransaction = null;
+
+      Object.keys(this.transactionForm.controls).forEach(key => {
+        this.transactionForm.get(key)?.enable({ emitEvent: false });
+      });
+
+      this.transactionForm.reset({
+        type: 'PAYABLE',
+        nf: '',
+        description: '',
+        amount: null,
+        due_date: new Date().toISOString().split('T')[0],
+        paid_at: null,
+        party_id: '',
+        cost_center: '',
+        category: '',
+        is_paid: false,
+        status: 'pending',
+        payment_method: null,
+        bank_account_id: null,
+        attachment_url: ''
+      });
+
+      this.updateEntitiesList('PAYABLE');
+    }
   }
 
   updateEntitiesList(type: string) {
@@ -282,39 +387,197 @@ export class LancamentosListComponent implements OnInit {
     }
   }
 
+  openDeleteModal(row: ContaPagar) {
+    this.transactionToDelete = row;
+    this.isDeleteModalOpen = true;
+  }
+
+  closeDeleteModal() {
+    this.isDeleteModalOpen = false;
+    this.transactionToDelete = null;
+  }
+
+  confirmDelete() {
+    const row = this.transactionToDelete;
+    if (!row) {
+      return;
+    }
+    this.isDeleteModalOpen = false;
+    this.transactionToDelete = null;
+    this.deleteTransaction(row);
+  }
+
+  canEdit(row: ContaPagar): boolean {
+    return row.status !== 'paid' && row.status !== 'canceled';
+  }
+
+  canPay(row: ContaPagar): boolean {
+    return row.status !== 'paid' && row.status !== 'canceled';
+  }
+
+  canCancel(row: ContaPagar): boolean {
+    return row.status !== 'canceled';
+  }
+
+  canDelete(row: ContaPagar): boolean {
+    return row.status !== 'paid' && row.status !== 'canceled';
+  }
+
+  onSelectRowAction(event: MouseEvent, row: ContaPagar, mode: 'edit' | 'pay' | 'cancel' | 'delete') {
+    try { event.stopPropagation(); } catch {}
+    
+    if (row.status === 'canceled') {
+      this.toastService.triggerToast(
+        'warning',
+        'Ação não permitida',
+        'Lançamentos cancelados não podem ser editados, pagos, cancelados novamente ou excluídos.'
+      );
+      return;
+    }
+
+    if (mode === 'delete') {
+      this.openDeleteModal(row);
+      return;
+    }
+    this.startFormFromRow(row, mode);
+  }
+
+  private startFormFromRow(row: ContaPagar, mode: 'edit' | 'pay' | 'cancel') {
+    this.formMode = mode;
+    this.editingTransaction = row;
+    this.isFormVisible = true;
+
+    Object.keys(this.transactionForm.controls).forEach(key => {
+      this.transactionForm.get(key)?.enable({ emitEvent: false });
+    });
+
+    const isPaid = mode === 'pay' || row.status === 'paid';
+    const raw: any = row as any;
+
+    const dueDateValue = row.due_date ? new Date(row.due_date) : new Date();
+    const paidAtValue = isPaid && row.paid_at ? new Date(row.paid_at as any) : null;
+
+    this.transactionForm.patchValue({
+      type: row.type || 'PAYABLE',
+      nf: raw.nf || '',
+      description: row.description || '',
+      amount: row.amount,
+      due_date: dueDateValue,
+      paid_at: paidAtValue,
+      party_id: raw.party_id || row.vendor_id || '',
+      cost_center: row.cost_center || '',
+      category: row.category || '',
+      is_paid: isPaid,
+      status: isPaid ? 'paid' : (row.status || 'pending'),
+      payment_method: isPaid ? raw.payment_method || null : null,
+      bank_account_id: isPaid ? raw.bank_account_id || null : null,
+      attachment_url: row.attachment_url || ''
+    });
+
+    this.updateEntitiesList(this.transactionForm.get('type')?.value || 'PAYABLE');
+
+    if (mode === 'pay') {
+      const controlsToDisable = [
+        'type',
+        'description',
+        'amount',
+        'due_date',
+        'party_id',
+        'cost_center',
+        'category',
+        'status',
+        'attachment_url'
+      ];
+      controlsToDisable.forEach(name => {
+        this.transactionForm.get(name)?.disable({ emitEvent: false });
+      });
+
+      const hasNf = !!raw.nf;
+      const nfControl = this.transactionForm.get('nf');
+      if (hasNf) {
+        nfControl?.disable({ emitEvent: false });
+      } else {
+        nfControl?.enable({ emitEvent: false });
+      }
+
+      this.transactionForm.get('is_paid')?.disable({ emitEvent: false });
+    } else if (mode === 'cancel') {
+      // Disable all fields for cancellation confirmation
+      Object.keys(this.transactionForm.controls).forEach(key => {
+        this.transactionForm.get(key)?.disable({ emitEvent: false });
+      });
+    } else if (mode === 'edit') {
+      // due_date cannot be changed via PATCH
+      this.transactionForm.get('due_date')?.disable({ emitEvent: false });
+    }
+
+    try {
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch {}
+  }
+
+  private deleteTransaction(row: ContaPagar) {
+    if (row.status === 'paid') {
+      this.toastService.triggerToast(
+        'warning',
+        'Exclusão não permitida',
+        'Lançamentos pagos devem ser estornados usando o cancelamento, não exclusão.'
+      );
+      return;
+    }
+
+    if (!this.selectedStore || !this.selectedStore.id_code) {
+      this.toastService.triggerToast('warning', 'Empresa não selecionada', 'É obrigatório selecionar uma empresa para gerenciar o lançamento.');
+      return;
+    }
+
+    this.financial.updateTransaction(row.id_code, { is_deleted: true }).subscribe({
+      next: () => {
+        this.toastService.triggerToast('success', 'Lançamento excluído', 'O lançamento foi excluído com sucesso e não aparecerá mais na listagem nem nos KPIs.');
+        if (this.selectedStore?.id_code) {
+          this.loadTransactions();
+        }
+      },
+      error: (err) => {
+        console.error('Erro ao excluir lançamento', err);
+        const msg = err?.error?.message || err?.message || 'Erro ao excluir lançamento. Verifique e tente novamente.';
+        this.toastService.triggerToast('error', 'Erro na exclusão', msg);
+      }
+    });
+  }
+
   saveTransaction() {
-    if (this.transactionForm.valid) {
+    // If canceling, skip validation since fields are disabled
+    if (this.transactionForm.valid || this.formMode === 'cancel') {
       if (!this.selectedStore || !this.selectedStore.id_code) {
-        alert('Nenhuma empresa selecionada!');
+        this.toastService.triggerToast('warning', 'Empresa não selecionada', 'É obrigatório selecionar uma empresa para registrar o lançamento.');
         return;
       }
 
-      const formValue = this.transactionForm.value;
+      const formValue = this.transactionForm.getRawValue();
       
-      // Prepare payload based on documentation
       const payload: any = {
         type: formValue.type,
         description: formValue.description,
         amount: formValue.amount,
-        due_date: new Date(formValue.due_date).toISOString().split('T')[0], // YYYY-MM-DD
+        due_date: new Date(formValue.due_date).toISOString().split('T')[0],
         is_paid: formValue.is_paid,
         status: formValue.is_paid ? 'paid' : 'pending',
         store_id: this.selectedStore.id_code
       };
 
-      // Optional fields
       if (formValue.nf) payload.nf = formValue.nf;
       if (formValue.party_id) payload.party_id = formValue.party_id;
       if (formValue.cost_center) payload.cost_center = formValue.cost_center;
       if (formValue.category) payload.category = formValue.category;
       if (formValue.attachment_url) payload.attachment_url = formValue.attachment_url;
 
-      // Conditional fields for PAID status
       if (formValue.is_paid) {
-        payload.paid_at = new Date(formValue.paid_at).toISOString().split('T')[0]; // YYYY-MM-DD
+        payload.paid_at = new Date(formValue.paid_at).toISOString().split('T')[0];
         payload.payment_method = formValue.payment_method;
         
-        // Conditional bank_account_id
         if (['pix', 'bank_transfer', 'boleto'].includes(formValue.payment_method)) {
           payload.bank_account_id = formValue.bank_account_id;
         }
@@ -322,32 +585,48 @@ export class LancamentosListComponent implements OnInit {
 
       console.log('Enviando payload:', payload);
 
-      this.financial.createTransaction(payload).subscribe({
+      const request$ = (['edit', 'pay', 'cancel'].includes(this.formMode) && this.editingTransaction?.id_code)
+        ? (() => {
+            const { due_date, ...updatePayload } = payload;
+
+            if (this.formMode === 'cancel') {
+              const cancelPayload: any = {
+                is_paid: false,
+                status: 'canceled',
+                paid_at: null,
+                payment_method: null,
+                bank_account_id: null
+              };
+              return this.financial.updateTransaction(this.editingTransaction!.id_code, cancelPayload);
+            }
+
+            return this.financial.updateTransaction(this.editingTransaction!.id_code, updatePayload);
+          })()
+        : this.financial.createTransaction(payload);
+
+      request$.subscribe({
         next: (response) => {
-          console.log('Transação criada com sucesso', response);
+          const action = this.formMode === 'cancel' ? 'cancelado' : (['edit', 'pay'].includes(this.formMode) ? 'atualizado' : 'criado');
+          console.log(`Transação ${action} com sucesso`, response);
           this.toggleForm();
-          this.initForm(); // Reset form
+          this.initForm();
           
-          // Refresh list
           if (this.selectedStore?.id_code) {
-            this.financial.getContasPagar(this.selectedStore.id_code).subscribe(rows => {
-              this.allData = this.normalizeRows(rows);
-              this.updatePagination();
-            });
+            this.loadTransactions();
           }
-          alert('Lançamento criado com sucesso!');
+          this.toastService.triggerToast('success', 'Lançamento processado', `O lançamento financeiro foi ${action} com sucesso no sistema.`);
         },
         error: (err) => {
-          console.error('Erro ao criar transação', err);
-          alert('Erro ao criar lançamento. Verifique os dados e tente novamente.');
+          console.error('Erro ao processar transação', err);
+          const msg = err?.error?.message || err?.message || 'Erro ao processar lançamento. Verifique os dados e tente novamente.';
+          this.toastService.triggerToast('error', 'Erro no lançamento', 'Não foi possível registrar o lançamento. ' + msg);
         }
       });
     } else {
-      // Mark all fields as touched to show errors
       Object.keys(this.transactionForm.controls).forEach(key => {
         this.transactionForm.get(key)?.markAsTouched();
       });
-      alert('Por favor, preencha todos os campos obrigatórios corretamente.');
+      this.toastService.triggerToast('warning', 'Dados incompletos', 'Por favor, preencha todos os campos obrigatórios corretamente para continuar.');
     }
   }
 
@@ -355,16 +634,13 @@ export class LancamentosListComponent implements OnInit {
     this.selectedStore = this.localStorageService.getData<Store>(this.STORE_KEY);
 
     if (this.selectedStore && this.selectedStore.id_code) {
-      this.financial.getContasPagar(this.selectedStore.id_code).subscribe({
-        next: (rows) => {
-          this.allData = this.normalizeRows(rows);
-          this.updatePagination();
-        },
-        error: (err) => console.error('Erro ao buscar lançamentos', err)
-      });
+      this.loadTransactions();
     } else {
       this.allData = [];
-      this.updatePagination();
+      this.paginatedData = [];
+      this.totalItems = 0;
+      this.totalPages = 1;
+      this.summary = null;
     }
 
     // Load dependencies
@@ -451,22 +727,23 @@ export class LancamentosListComponent implements OnInit {
   // Pagination Logic
   updatePagination() {
     let data = this.filteredData;
-    
-    // Sort
+
     if (this.sortKey) {
       data = this.sortData(data, this.sortKey, this.sortOrder);
     }
-    
+
     this.totalItems = data.length;
-    this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-    
+    this.totalPages = Math.max(1, Math.ceil(this.totalItems / this.itemsPerPage));
+
     // Ensure current page is valid
     if (this.currentPage > this.totalPages) {
-      this.currentPage = 1;
+      this.currentPage = this.totalPages;
     }
-    
+
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    this.paginatedData = data.slice(startIndex, startIndex + this.itemsPerPage);
+    const endIndex = startIndex + this.itemsPerPage;
+
+    this.paginatedData = data.slice(startIndex, endIndex);
   }
 
   onItemsPerPageChange() {
@@ -475,12 +752,14 @@ export class LancamentosListComponent implements OnInit {
   }
 
   onPageChange(page: number) {
+    if (page < 1 || page > this.totalPages) {
+      return;
+    }
     this.currentPage = page;
     this.updatePagination();
   }
   
   onSearchChange() {
-    this.currentPage = 1;
     this.updatePagination();
   }
 

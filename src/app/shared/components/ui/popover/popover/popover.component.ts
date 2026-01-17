@@ -15,7 +15,8 @@ type Position = 'top' | 'right' | 'bottom' | 'left';
   selector: 'app-popover',
   imports: [CommonModule],
   templateUrl: './popover.component.html',
-  styles: ``
+  styles: ``,
+  exportAs: 'appPopover'
 })
 export class PopoverComponent {
 
@@ -52,6 +53,10 @@ export class PopoverComponent {
 
   togglePopover() {
     this.isOpen = !this.isOpen;
+  }
+ 
+  close() {
+    this.isOpen = false;
   }
 
   get positionClasses(): string {

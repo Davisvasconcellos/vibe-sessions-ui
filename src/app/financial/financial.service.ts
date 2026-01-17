@@ -4,7 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../shared/services/auth.service';
-import { ContaPagar } from './models/conta-pagar';
+import { ContaPagar, TransactionsListResponse } from './models/conta-pagar';
 import { ContaReceber } from './models/conta-receber';
 import { Fornecedor } from './models/fornecedor';
 import { Cliente } from './models/cliente';
@@ -22,6 +22,11 @@ export class FinancialService {
   createTransaction(transactionData: any): Observable<any> {
     const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
     return this.http.post(`${this.API_BASE_URL}/financial/transactions`, transactionData, { headers });
+  }
+
+  updateTransaction(id: string, transactionData: any): Observable<any> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.patch(`${this.API_BASE_URL}/financial/transactions/${id}`, transactionData, { headers });
   }
 
   // Mocked data
@@ -57,21 +62,42 @@ export class FinancialService {
     ]);
   }
 
-  getContasPagar(storeId?: string): Observable<ContaPagar[]> {
+  getContasPagar(storeId?: string, page?: number, limit?: number, kpiLinked?: boolean): Observable<TransactionsListResponse> {
     if (!storeId) {
-      // Fallback para mock se não tiver storeId (comportamento legado para evitar quebra imediata, ou retornar vazio)
-      // Por enquanto, retornando vazio para forçar o uso do storeId
-      return of([]);
+      return of({
+        transactions: [],
+        summary: undefined,
+        meta: undefined
+      });
     }
 
     const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    const params: any = { store_id: storeId };
+    if (page != null) {
+      params.page = page;
+    }
+    if (limit != null) {
+      params.limit = limit;
+    }
+    if (kpiLinked !== undefined) {
+      params.kpi_linked = kpiLinked;
+    }
+
     return this.http.get<any>(`${this.API_BASE_URL}/financial/transactions`, { 
       headers,
-      params: { store_id: storeId }
+      params
     }).pipe(
       map(response => {
-        // Tenta extrair de response.data.transactions ou response.data ou retorna array vazio
-        return (response.data?.transactions || response.data || []) as ContaPagar[];
+        const data = response?.data || {};
+        const transactions = (data.transactions || data || []) as ContaPagar[];
+        const summary = data.summary;
+        const meta = response.meta;
+
+        return {
+          transactions,
+          summary,
+          meta
+        } as TransactionsListResponse;
       })
     );
   }

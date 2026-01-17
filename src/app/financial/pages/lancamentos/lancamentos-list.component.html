@@ -55,28 +55,28 @@
     <div class="grid grid-cols-1 rounded-xl border border-gray-200 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-y-0 dark:divide-gray-800 dark:border-gray-800">
       <div class="border-b p-5 sm:border-r lg:border-b-0">
         <p class="mb-1.5 text-sm text-gray-400 dark:text-gray-500">
-          A Pagar (Pendente)
+          A Pagar
         </p>
         <h3 class="text-3xl text-gray-800 dark:text-white/90">{{ totalPayablePending | currency:'BRL' }}</h3>
       </div>
       <div class="border-b p-5 lg:border-b-0">
         <p class="mb-1.5 text-sm text-gray-400 dark:text-gray-500">
-          A Receber (Pendente)
+          A Receber
         </p>
         <h3 class="text-3xl text-gray-800 dark:text-white/90">{{ totalReceivablePending | currency:'BRL' }}</h3>
       </div>
       <div class="border-b p-5 sm:border-r sm:border-b-0">
         <p class="mb-1.5 text-sm text-gray-400 dark:text-gray-500">
-          Vencido
+          Pago
         </p>
-        <h3 class="text-3xl text-gray-800 dark:text-white/90">{{ totalOverdue | currency:'BRL' }}</h3>
+        <h3 class="text-3xl text-gray-800 dark:text-white/90">{{ totalPayablePaid | currency:'BRL' }}</h3>
       </div>
       <div class="p-5">
         <p class="mb-1.5 text-sm text-gray-400 dark:text-gray-500">
-          Total Pago
+          Recebido
         </p>
         <h3 class="text-3xl text-gray-800 dark:text-white/90">
-          {{ totalPaid | currency:'BRL' }}
+          {{ totalReceivablePaid | currency:'BRL' }}
         </h3>
       </div>
     </div>
@@ -86,13 +86,40 @@
   <div class="mt-5 mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3" *ngIf="isFormVisible">
     <!-- Card do formulário -->
     <div class="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:col-span-2">
-      <h3 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">Novo Lançamento</h3>
+      <h3 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
+        <ng-container [ngSwitch]="formMode">
+          <span
+            *ngSwitchCase="'pay'"
+            class="inline-block rounded-r-full bg-green-500 px-4 py-1.5 text-sm font-semibold text-white dark:bg-green-600"
+          >
+            Pagar Lançamento
+          </span>
+          <span
+            *ngSwitchCase="'edit'"
+            class="inline-block rounded-r-full bg-blue-500 px-4 py-1.5 text-sm font-semibold text-white dark:bg-blue-600"
+          >
+            Editar Lançamento
+          </span>
+          <span
+            *ngSwitchCase="'cancel'"
+            class="inline-block rounded-r-full bg-red-500 px-4 py-1.5 text-sm font-semibold text-white dark:bg-red-600"
+          >
+            Cancelar Lançamento
+          </span>
+          <span
+            *ngSwitchDefault
+            class="inline-block rounded-r-full bg-brand-500 px-4 py-1.5 text-sm font-semibold text-white dark:bg-brand-600"
+          >
+            Novo Lançamento
+          </span>
+        </ng-container>
+      </h3>
       <form [formGroup]="transactionForm" (ngSubmit)="saveTransaction()">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-6 items-end">
           <div class="md:col-span-2">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Tipo</label>
             <div class="relative z-20 bg-transparent">
-              <select formControlName="type" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+              <select formControlName="type" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option *ngFor="let t of transactionTypes" [value]="t.value">{{ t.label }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
@@ -106,7 +133,7 @@
               {{ transactionForm.get('type')?.value === 'PAYABLE' ? 'Fornecedor' : 'Cliente' }}
             </label>
             <div class="relative z-20 bg-transparent">
-              <select formControlName="party_id" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+              <select formControlName="party_id" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option value="">Selecione...</option>
                 <option *ngFor="let e of entities" [value]="e.id">{{ e.name }}</option>
               </select>
@@ -118,13 +145,17 @@
 
           <div class="md:col-span-2">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">NF</label>
-            <input type="text" formControlName="nf" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+            <input
+              type="text"
+              formControlName="nf"
+              [readonly]="formMode === 'pay' && !!editingTransaction?.nf"
+              class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
           </div>
 
           <div class="md:col-span-3">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Centro de Custo</label>
             <div class="relative z-20 bg-transparent">
-              <select formControlName="cost_center" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+              <select formControlName="cost_center" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option value="">Selecione...</option>
                 <option *ngFor="let cc of costCenters" [value]="cc.name">{{ cc.name }}</option>
               </select>
@@ -137,7 +168,7 @@
           <div class="md:col-span-3">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Categoria</label>
             <div class="relative z-20 bg-transparent">
-              <select formControlName="category" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+              <select formControlName="category" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option value="">Selecione...</option>
                 <option *ngFor="let cat of categories" [value]="cat.name">{{ cat.name }}</option>
               </select>
@@ -149,18 +180,20 @@
 
           <div class="md:col-span-6">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Descrição</label>
-            <input type="text" formControlName="description" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" placeholder="Ex: Pagamento fornecedor">
+            <input type="text" formControlName="description" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+              placeholder="Ex: Pagamento fornecedor">
           </div>
 
           <div class="md:col-span-2">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Valor</label>
-            <input type="number" formControlName="amount" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" placeholder="0,00" step="0.01" min="0">
+            <input type="number" formControlName="amount" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+              placeholder="0,00" step="0.01" min="0">
           </div>
 
           <div class="md:col-span-2">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Vencimento</label>
             <div class="relative">
-              <input [matDatepicker]="picker" formControlName="due_date" (click)="picker.open()" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+              <input [matDatepicker]="picker" formControlName="due_date" (click)="picker.open()" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
               <mat-datepicker-toggle matIconSuffix [for]="picker" class="absolute right-2 top-1/2 -translate-y-1/2"></mat-datepicker-toggle>
               <mat-datepicker #picker></mat-datepicker>
             </div>
@@ -171,7 +204,7 @@
               {{ transactionForm.get('type')?.value === 'RECEIVABLE' ? 'Data Recebimento' : 'Data Pagamento' }}
             </label>
             <div class="relative">
-              <input [matDatepicker]="pickerPaid" formControlName="paid_at" (click)="pickerPaid.open()" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+              <input [matDatepicker]="pickerPaid" formControlName="paid_at" (click)="pickerPaid.open()" class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
               <mat-datepicker-toggle matIconSuffix [for]="pickerPaid" class="absolute right-2 top-1/2 -translate-y-1/2"></mat-datepicker-toggle>
               <mat-datepicker #pickerPaid></mat-datepicker>
             </div>
@@ -180,7 +213,7 @@
           <div class="md:col-span-3" *ngIf="transactionForm.get('is_paid')?.value">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Método de Pagamento</label>
             <div class="relative z-20 bg-transparent">
-              <select formControlName="payment_method" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+              <select formControlName="payment_method" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option value="">Selecione...</option>
                 <option *ngFor="let m of paymentMethods" [value]="m.value">{{ m.label }}</option>
               </select>
@@ -193,7 +226,7 @@
           <div class="md:col-span-3" *ngIf="transactionForm.get('is_paid')?.value && paymentMethodRequiresBank">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Conta Bancária</label>
             <div class="relative z-20 bg-transparent">
-              <select formControlName="bank_account_id" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+              <select formControlName="bank_account_id" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option value="">Selecione...</option>
                 <option *ngFor="let acc of bankAccounts" [value]="acc.id">{{ acc.label }}</option>
               </select>
@@ -206,14 +239,14 @@
 
         <div class="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div class="flex items-center gap-2">
-             <input type="checkbox" id="is_paid" formControlName="is_paid" class="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+             <input type="checkbox" id="is_paid" formControlName="is_paid" class="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:bg-brand-50 disabled:border-brand-200 disabled:cursor-not-allowed disabled:opacity-70 dark:disabled:bg-brand-500/15 dark:disabled:border-brand-500">
              <label for="is_paid" class="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer select-none">
                Marcar como {{ transactionForm.get('type')?.value === 'RECEIVABLE' ? 'recebido' : 'pago' }}
              </label>
           </div>
 
-          <button type="submit" [disabled]="transactionForm.invalid" class="flex items-center justify-center rounded-lg bg-brand-500 px-6 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto">
-            Adicionar
+          <button type="submit" [disabled]="transactionForm.invalid && formMode !== 'cancel'" class="flex items-center justify-center rounded-lg bg-brand-500 px-6 py-2 text-center text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/50 disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto">
+            {{ formMode === 'pay' ? 'Pagar' : (formMode === 'edit' ? 'Atualizar' : (formMode === 'cancel' ? 'Confirmar Cancelamento' : 'Adicionar')) }}
           </button>
         </div>
       </form>
@@ -264,7 +297,7 @@
   </div>
 
   <!-- Card da tabela -->
-  <div class="mt-0 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+  <div class="mt-0 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
     <div class="flex flex-col gap-2 px-4 py-4 border-b border-gray-200 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex items-center gap-3">
         <span class="text-gray-500 dark:text-gray-400"> Show </span>
@@ -289,7 +322,7 @@
       </div>
 
       <div class="flex flex-col sm:flex-row gap-3 items-center">
-        <div class="hidden h-11 items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 lg:inline-flex dark:bg-gray-900">
+        <div class="inline-flex h-11 items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
           <button
             type="button"
             (click)="onStatusFilterChange('all')"
@@ -302,14 +335,14 @@
             (click)="onStatusFilterChange('unpaid')"
             class="text-theme-sm h-10 rounded-md px-3 py-2 font-medium hover:text-gray-900 dark:hover:text-white"
             [ngClass]="{'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800': statusFilter === 'unpaid', 'text-gray-500 dark:text-gray-400': statusFilter !== 'unpaid'}">
-            Não pagos
+            Pendente
           </button>
           <button
             type="button"
             (click)="onStatusFilterChange('paid')"
             class="text-theme-sm h-10 rounded-md px-3 py-2 font-medium hover:text-gray-900 dark:hover:text-white"
             [ngClass]="{'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800': statusFilter === 'paid', 'text-gray-500 dark:text-gray-400': statusFilter !== 'paid'}">
-            Pagos
+            Pago
           </button>
         </div>
         <div class="relative w-full sm:w-auto">
@@ -448,6 +481,56 @@
             </td>
             <td class="p-4 whitespace-nowrap">
               <div class="flex items-center gap-2 justify-end">
+                <app-popover *ngIf="row.status !== 'canceled'" #rowActionsPopover="appPopover" position="left">
+                  <ng-template #popoverTrigger>
+                    <button
+                      type="button"
+                      class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 hover:text-gray-800 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                    >
+                      <svg class="size-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 12.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" fill="currentColor"/>
+                        <path d="M12 6.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" fill="currentColor"/>
+                        <path d="M12 18.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" fill="currentColor"/>
+                      </svg>
+                    </button>
+                  </ng-template>
+                  <ng-template #popoverContent>
+                    <div class="w-full space-y-1 p-2">
+                      <button
+                        *ngIf="canEdit(row)"
+                        type="button"
+                        (click)="onSelectRowAction($event, row, 'edit'); rowActionsPopover.close()"
+                        class="flex w-full px-2 py-1.5 text-left text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-100"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        *ngIf="canPay(row)"
+                        type="button"
+                        (click)="onSelectRowAction($event, row, 'pay'); rowActionsPopover.close()"
+                        class="flex w-full px-2 py-1.5 text-left text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-100"
+                      >
+                        Pagar
+                      </button>
+                      <button
+                        *ngIf="canCancel(row)"
+                        type="button"
+                        (click)="onSelectRowAction($event, row, 'cancel'); rowActionsPopover.close()"
+                        class="flex w-full px-2 py-1.5 text-left text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-100"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        *ngIf="canDelete(row)"
+                        type="button"
+                        (click)="onSelectRowAction($event, row, 'delete'); rowActionsPopover.close()"
+                        class="flex w-full px-2 py-1.5 text-left text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-100"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  </ng-template>
+                </app-popover>
                 <button
                   type="button"
                   (click)="openEvidenceSidebar(row)"
@@ -662,4 +745,34 @@
       </div>
     </div>
   </aside>
+
+  <app-modal
+    [isOpen]="isDeleteModalOpen"
+    (close)="closeDeleteModal()"
+    className="max-w-[600px] p-5 lg:p-10"
+  >
+    <h4 class="font-semibold text-gray-800 mb-3 text-title-sm dark:text-white/90">
+      Confirmar exclusão
+    </h4>
+    <p class="text-sm leading-6 text-gray-500 dark:text-gray-400">
+      Tem certeza que deseja excluir este lançamento? Essa ação não pode ser desfeita.
+    </p>
+    <p
+      *ngIf="transactionToDelete"
+      class="mt-4 text-sm text-gray-700 dark:text-gray-300"
+    >
+      <span class="font-medium">Lançamento:</span>
+      <span class="ml-1">
+        {{ transactionToDelete.description || transactionToDelete.id_code }}
+      </span>
+    </p>
+    <div class="flex items-center justify-end w-full gap-3 mt-8">
+      <app-button size="sm" variant="outline" (btnClick)="closeDeleteModal()">
+        Cancelar
+      </app-button>
+      <app-button size="sm" (btnClick)="confirmDelete()">
+        Excluir
+      </app-button>
+    </div>
+  </app-modal>
 </div>

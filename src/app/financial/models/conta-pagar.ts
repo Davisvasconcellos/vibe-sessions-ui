@@ -19,3 +19,28 @@ export interface ContaPagar {
   type?: 'PAYABLE' | 'RECEIVABLE' | 'TRANSFER' | 'ADJUSTMENT';
 }
 
+export interface TransactionsSummary {
+  payable: {
+    pending: number;
+    paid: number;
+  };
+  receivable: {
+    pending: number;
+    paid: number;
+  };
+  overdue: number;
+  total_paid: number;
+}
+
+export interface TransactionsMeta {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface TransactionsListResponse {
+  transactions: ContaPagar[];
+  summary?: TransactionsSummary;
+  meta?: TransactionsMeta;
+}

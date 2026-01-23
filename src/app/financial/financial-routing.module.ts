@@ -13,12 +13,14 @@ import { ComissoesListComponent } from './pages/comissoes/comissoes-list.compone
 import { FinancialReportsComponent } from './pages/relatorios/financial-reports.component';
 import { SaldosBancariosListComponent } from './pages/saldos-bancarios/saldos-bancarios-list.component';
 import { FinancialPartiesComponent } from './pages/parties/financial-parties.component';
+import { RecurrencesListComponent } from './pages/recurrences/recurrences-list.component';
 
 import { HomeFinancialComponent } from './pages/home-financial/home-financial.component';
 
 const routes: Routes = [
   { path: '', component: HomeFinancialComponent },
   { path: 'dashboard', component: FinancialDashboardComponent },
+  { path: 'recorrencias', component: RecurrencesListComponent },
   // Lançamentos (antes: Contas a Pagar)
   { path: 'lancamentos', component: LancamentosListComponent },
   { path: 'lancamentos/novo', component: LancamentosFormComponent },

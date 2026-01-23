@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface Option {
   value: string;
@@ -8,7 +9,7 @@ export interface Option {
 
 @Component({
   selector: 'app-select',
-  imports:[CommonModule],
+  imports:[CommonModule, TranslateModule],
   templateUrl: './select.component.html',
 })
 export class SelectComponent implements OnInit {

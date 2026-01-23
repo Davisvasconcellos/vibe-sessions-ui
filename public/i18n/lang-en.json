@@ -268,6 +268,7 @@
         "adjustment": "Adjustment"
       },
       "status": {
+        "provisioned": "Provisioned",
         "pending": "Pending",
         "approved": "Approved",
         "scheduled": "Scheduled",
@@ -311,6 +312,7 @@
       },
       "filters": {
         "all": "All",
+        "provisioned": "Provisioned",
         "unpaid": "Pending",
         "paid": "Paid"
       },

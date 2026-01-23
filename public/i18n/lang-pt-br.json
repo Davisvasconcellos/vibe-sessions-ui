@@ -231,6 +231,7 @@
           "type": "Tipo de Conta",
           "initialBalance": "Saldo Inicial",
           "isDefault": "Conta Principal",
+          "allowedPaymentMethods": "Métodos de Pagamento Permitidos",
           "types": {
             "checking": "Conta Corrente",
             "savings": "Conta Poupança",
@@ -268,6 +269,7 @@
         "adjustment": "Ajuste"
       },
       "status": {
+        "provisioned": "Provisionado",
         "pending": "Pendente",
         "approved": "Aprovado",
         "scheduled": "Agendado",
@@ -311,6 +313,7 @@
       },
       "filters": {
         "all": "Todos",
+        "provisioned": "Provisionado",
         "unpaid": "Pendente",
         "paid": "Pago"
       },
@@ -345,6 +348,7 @@
         "delete": "Excluir",
         "confirmDelete": "Sim, excluir",
         "add": "Adicionar",
+        "update": "Atualizar",
         "exportCsv": "Exportar CSV"
       },
       "offcanvas": {

@@ -100,6 +100,7 @@ export class AppSidebarComponent {
         { name: 'Início', path: '/financial' },
         { name: 'Dashboard', path: '/financial/dashboard' },
         { name: 'Lançamentos', path: '/financial/lancamentos' },
+        { name: 'Recorrências', path: '/financial/recorrencias' },
         { name: 'Parceiros', path: '/financial/parceiros' },
         { name: 'Despesas menores', path: '/financial/despesas-menores' },
         { name: 'Comissões', path: '/financial/comissoes' },

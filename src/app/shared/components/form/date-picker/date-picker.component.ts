@@ -18,19 +18,32 @@ export class DatePickerComponent {
   @Input() placeholder?: string;
   @Input() dateFormat?: string = 'd/m/Y'; // Brazilian format by default
   @Input() position?: 'auto' | 'above' | 'below' | 'auto left' | 'auto center' | 'auto right' | 'above left' | 'above center' | 'above right' | 'below left' | 'below center' | 'below right' = 'auto'; // Position option for calendar placement
+  @Input() minDate?: string | Date;
+  @Input() maxDate?: string | Date;
+  @Input() labelSize: string = 'text-sm';
   @Output() dateChange = new EventEmitter<any>();
 
   @ViewChild('dateInput', { static: false }) dateInput!: ElementRef<HTMLInputElement>;
 
   private flatpickrInstance: flatpickr.Instance | undefined;
 
+  ngOnChanges(changes: any) {
+    if (this.flatpickrInstance) {
+      if (changes.minDate) {
+        this.flatpickrInstance.set('minDate', this.minDate);
+      }
+      if (changes.maxDate) {
+        this.flatpickrInstance.set('maxDate', this.maxDate);
+      }
+      if (changes.defaultDate) {
+        this.flatpickrInstance.setDate(this.defaultDate as any, false);
+      }
+    }
+  }
+
   ngAfterViewInit() {
     // Find the closest modal container to append the calendar to
     const modalContainer = this.dateInput.nativeElement.closest('.modal, [role="dialog"], .fixed') as HTMLElement;
-    
-    // Calculate the maximum date (18 years ago from today)
-    const today = new Date();
-    const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
     
     // Create flatpickr configuration
     const config: any = {
@@ -40,7 +53,8 @@ export class DatePickerComponent {
       dateFormat: this.dateFormat || 'd/m/Y',
       defaultDate: this.defaultDate,
       position: this.position || 'auto',
-      maxDate: maxDate, // Disable dates after 18 years ago (prevent minors)
+      minDate: this.minDate,
+      maxDate: this.maxDate,
       onChange: (selectedDates: any, dateStr: string, instance: any) => {
         this.dateChange.emit({ selectedDates, dateStr, instance });
       }

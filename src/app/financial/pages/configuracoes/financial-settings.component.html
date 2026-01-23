@@ -558,6 +558,20 @@
                 (checkedChange)="bankAccountForm.get('is_default')?.setValue($event)"
               />
             </div>
+
+            <div class="sm:col-span-2">
+              <app-label>{{ 'financial.bankAccount.form.allowedPaymentMethods' | translate }}</app-label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <div *ngFor="let method of paymentMethodOptions">
+                  <app-checkbox
+                    [id]="'method_' + method.value"
+                    [label]="method.labelKey | translate"
+                    [checked]="isPaymentMethodSelected(method.value)"
+                    (checkedChange)="togglePaymentMethod(method.value, $event)"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
           <div class="flex justify-end gap-3">
             <app-button

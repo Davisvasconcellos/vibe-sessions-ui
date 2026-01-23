@@ -16,7 +16,7 @@
       [selected]="!value"
       class="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
     >
-      {{ placeholder }}
+      {{ placeholder | translate }}
     </option>
     <!-- Map over options -->
     @for (option of options; track $index) {
@@ -24,7 +24,7 @@
       [value]="option.value"
       class="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
     >
-      {{ option.label }}
+      {{ option.label | translate }}
     </option>
     }
   </select>

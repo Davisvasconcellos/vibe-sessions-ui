@@ -10,4 +10,5 @@ import { Component,Input } from '@angular/core';
 export class LabelComponent {
   @Input() for?: string;
   @Input() className = '';
+  @Input() textSize = 'text-sm';
 }

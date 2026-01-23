@@ -10,6 +10,7 @@ import { Fornecedor } from './models/fornecedor';
 import { Cliente } from './models/cliente';
 import { Pagamento } from './models/pagamento';
 import { Party } from './models/party';
+import { Recurrence } from './models/recurrence';
 import { FinancialCategory, CostCenter, FinancialTag } from './models/financial-settings.models';
 // import { DespesaMenor } from './models/despesa-menor';
 // import { Comissao } from './models/comissao';
@@ -141,6 +142,43 @@ export class FinancialService {
     return this.http.delete<any>(`${this.API_BASE_URL}/financial/tags/${idCode}`, { headers });
   }
 
+  // Recurrences Methods
+  getRecurrences(storeId: string, filters?: { status?: string; type?: string }): Observable<Recurrence[]> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    const params: any = { store_id: storeId };
+    if (filters?.status) params.status = filters.status;
+    if (filters?.type) params.type = filters.type;
+
+    return this.http.get<any>(`${this.API_BASE_URL}/financial/recurrences`, { headers, params })
+      .pipe(map(response => response.data || response || []));
+  }
+
+  createRecurrence(data: Partial<Recurrence>): Observable<Recurrence> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.post<any>(`${this.API_BASE_URL}/financial/recurrences`, data, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
+  updateRecurrence(id: string, data: Partial<Recurrence>): Observable<Recurrence> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.patch<any>(`${this.API_BASE_URL}/financial/recurrences/${id}`, data, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
+  deleteRecurrence(id: string): Observable<void> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.delete<any>(`${this.API_BASE_URL}/financial/recurrences/${id}`, { headers });
+  }
+
+  generateRecurrenceTransactions(storeId: string, targetDate?: string): Observable<any> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    const body: any = { store_id: storeId };
+    if (targetDate) body.target_date = targetDate;
+    
+    return this.http.post<any>(`${this.API_BASE_URL}/financial/recurrences/generate`, body, { headers })
+      .pipe(map(response => response.data || response));
+  }
+
   getContasPagar(storeId?: string, page?: number, limit?: number, kpiLinked?: boolean): Observable<TransactionsListResponse> {
     if (!storeId) {
       return of({
@@ -229,6 +267,16 @@ export class FinancialService {
     const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
     return this.http.get<any>(`${this.API_BASE_URL}/financial/bank-accounts/${idCode}`, { headers })
       .pipe(map(response => response.data || response));
+  }
+
+  getBankAccountTransactions(idCode: string, filters?: any): Observable<any[]> {
+    const headers = { 'Authorization': `Bearer ${this.authService.getAuthToken()}` };
+    return this.http.get<any>(`${this.API_BASE_URL}/financial/bank-accounts/${idCode}/transactions`, { 
+      headers,
+      params: filters
+    }).pipe(
+      map(response => response.data || response || [])
+    );
   }
 
   createBankAccount(data: any): Observable<any> {

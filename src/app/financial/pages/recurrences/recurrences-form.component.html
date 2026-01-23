@@ -1,0 +1,240 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-6 items-end">
+    <!-- Type -->
+    <div class="md:col-span-2">
+      <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        {{ 'financial.transactions.form.fields.type' | translate }}
+      </label>
+      <div class="relative z-20 bg-transparent">
+        <select
+          formControlName="type"
+          class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+        >
+          <option *ngFor="let t of typeOptions" [value]="t.value">{{ t.label }}</option>
+        </select>
+        <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
+          <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- Party -->
+    <div class="md:col-span-2">
+      <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        {{
+          form.get('type')?.value === 'PAYABLE'
+            ? ('financial.transactions.form.fields.supplier' | translate)
+            : ('financial.transactions.form.fields.customer' | translate)
+        }}
+      </label>
+      <div class="relative z-20 bg-transparent">
+        <select
+          formControlName="party_id"
+          class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+        >
+          <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
+          <option *ngFor="let option of partyOptions" [value]="option.value">{{ option.label }}</option>
+        </select>
+        <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
+          <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="md:col-span-2">
+      <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        Status
+      </label>
+      <div class="relative z-20 bg-transparent">
+        <select
+          formControlName="status"
+          class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+        >
+          <option *ngFor="let s of statusOptions" [value]="s.value">{{ s.label }}</option>
+        </select>
+        <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
+          <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- Cost Center -->
+    <div class="md:col-span-3">
+      <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        {{ 'financial.transactions.form.fields.costCenter' | translate }}
+      </label>
+      <div class="relative z-20 bg-transparent">
+        <select
+          formControlName="cost_center_id"
+          class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+        >
+          <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
+          <option *ngFor="let option of costCenterOptions" [value]="option.value">{{ option.label }}</option>
+        </select>
+        <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
+          <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- Category -->
+    <div class="md:col-span-3">
+      <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        {{ 'financial.transactions.form.fields.category' | translate }}
+      </label>
+      <div class="relative z-20 bg-transparent">
+        <select
+          formControlName="category_id"
+          class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+        >
+          <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
+          <option *ngFor="let option of categoryOptions" [value]="option.value">{{ option.label }}</option>
+        </select>
+        <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
+          <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="md:col-span-6">
+      <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        {{ 'financial.transactions.form.fields.description' | translate }}
+      </label>
+      <input
+        type="text"
+        formControlName="description"
+        class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+        [placeholder]="'financial.transactions.form.placeholders.description' | translate"
+      />
+    </div>
+
+    <!-- Amount -->
+    <div class="md:col-span-1">
+      <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        {{ 'financial.transactions.form.fields.amount' | translate }}
+      </label>
+      <input
+        type="number"
+        formControlName="amount"
+        class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+        [placeholder]="'financial.transactions.form.placeholders.amount' | translate"
+        step="0.01"
+        min="0"
+      />
+    </div>
+
+    <!-- Frequency -->
+    <div class="md:col-span-1">
+      <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        Frequência
+      </label>
+      <div class="relative z-20 bg-transparent">
+        <select
+          formControlName="frequency"
+          class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+        >
+          <option *ngFor="let f of frequencyOptions" [value]="f.value">{{ f.label }}</option>
+        </select>
+        <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
+          <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- Day of Month -->
+    <div class="md:col-span-1">
+      <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        Dia Venc.
+      </label>
+      <input
+        type="number"
+        formControlName="day_of_month"
+        min="1"
+        max="31"
+        class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+      />
+    </div>
+
+    <!-- Start Date -->
+    <div class="md:col-span-1">
+      <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        Data Início
+      </label>
+      <div class="relative">
+        <input
+          [matDatepicker]="pickerStart"
+          formControlName="start_date"
+          (click)="pickerStart.open()"
+          class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerStart" class="absolute right-2 top-1/2 -translate-y-1/2"></mat-datepicker-toggle>
+        <mat-datepicker #pickerStart></mat-datepicker>
+      </div>
+    </div>
+
+    <!-- Enable End Date Checkbox -->
+    <div class="md:col-span-1 flex items-center justify-center h-full pt-6">
+      <div class="flex items-center gap-2">
+        <input 
+          type="checkbox" 
+          id="has_end_date" 
+          formControlName="has_end_date" 
+          class="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+        >
+        <label for="has_end_date" class="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+          Definir Fim?
+        </label>
+      </div>
+    </div>
+
+    <!-- End Date -->
+    <div class="md:col-span-1" *ngIf="form.get('has_end_date')?.value">
+      <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+        Data Fim
+      </label>
+      <div class="relative">
+        <input
+          [matDatepicker]="pickerEnd"
+          formControlName="end_date"
+          [min]="form.get('start_date')?.value"
+          (click)="pickerEnd.open()"
+          class="h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100"
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="pickerEnd" class="absolute right-2 top-1/2 -translate-y-1/2"></mat-datepicker-toggle>
+        <mat-datepicker #pickerEnd></mat-datepicker>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="mt-4 flex items-center justify-end gap-3">
+    <button
+      type="button"
+      (click)="cancel.emit()"
+      class="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]"
+    >
+      Cancelar
+    </button>
+    <button
+      type="submit"
+      [disabled]="form.invalid"
+      class="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {{ recurrence ? ('financial.transactions.actions.update' | translate) : ('financial.transactions.actions.add' | translate) }}
+    </button>
+  </div>
+</form>

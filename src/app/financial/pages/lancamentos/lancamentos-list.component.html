@@ -169,9 +169,9 @@
               {{ 'financial.transactions.form.fields.costCenter' | translate }}
             </label>
             <div class="relative z-20 bg-transparent">
-              <select formControlName="cost_center" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
+              <select formControlName="cost_center_id" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
-                <option *ngFor="let cc of costCenters" [value]="cc.id_code">{{ cc.name }}</option>
+                <option *ngFor="let option of costCenterOptions" [value]="option.value">{{ option.text }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
                  <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -184,9 +184,9 @@
               {{ 'financial.transactions.form.fields.category' | translate }}
             </label>
             <div class="relative z-20 bg-transparent">
-              <select formControlName="category" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
+              <select formControlName="category_id" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
-                <option *ngFor="let cat of categories" [value]="cat.id_code">{{ cat.name }}</option>
+                <option *ngFor="let option of categoryOptions" [value]="option.value">{{ option.text }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
                  <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -254,7 +254,7 @@
             <div class="relative z-20 bg-transparent">
               <select formControlName="payment_method" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
-                <option *ngFor="let m of paymentMethods" [value]="m.value">{{ m.labelKey | translate }}</option>
+                <option *ngFor="let m of filteredPaymentMethods" [value]="m.value">{{ m.labelKey | translate }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
                  <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -269,7 +269,7 @@
             <div class="relative z-20 bg-transparent">
               <select formControlName="bank_account_id" class="w-full py-2 pl-3 pr-8 text-sm text-gray-800 bg-transparent border border-gray-300 rounded-lg appearance-none h-11 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:bg-brand-50 disabled:text-gray-700 disabled:cursor-not-allowed disabled:opacity-100 dark:disabled:bg-brand-500/15 dark:disabled:text-gray-100">
                 <option value="">{{ 'financial.transactions.form.placeholders.select' | translate }}</option>
-                <option *ngFor="let acc of bankAccounts" [value]="acc.id">{{ acc.label }}</option>
+                <option *ngFor="let acc of filteredBankAccounts" [value]="acc.id">{{ acc.label }}</option>
               </select>
               <span class="absolute z-30 text-gray-500 -translate-y-1/2 right-2 top-1/2 dark:text-gray-400">
                  <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke="" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -288,6 +288,13 @@
                    : ('financial.transactions.formLabels.isPaidPaid' | translate)
                }}
              </label>
+          </div>
+
+          <div class="flex items-center gap-2" *ngIf="editingTransaction?.status === 'provisioned'">
+            <input type="checkbox" id="effectivate" formControlName="effectivate" class="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+            <label for="effectivate" class="text-sm font-medium text-purple-700 dark:text-purple-400 cursor-pointer select-none">
+              Efetivar (Converter para Pendente)
+            </label>
           </div>
 
           <div class="flex items-center gap-4 w-full md:w-auto justify-end">
@@ -477,6 +484,13 @@
           </button>
           <button
             type="button"
+            (click)="onStatusFilterChange('provisioned')"
+            class="text-theme-sm h-10 rounded-md px-3 py-2 font-medium hover:text-gray-900 dark:hover:text-white"
+            [ngClass]="{'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800': statusFilter === 'provisioned', 'text-gray-500 dark:text-gray-400': statusFilter !== 'provisioned'}">
+            {{ 'financial.transactions.filters.provisioned' | translate }}
+          </button>
+          <button
+            type="button"
             (click)="onStatusFilterChange('unpaid')"
             class="text-theme-sm h-10 rounded-md px-3 py-2 font-medium hover:text-gray-900 dark:hover:text-white"
             [ngClass]="{'shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800': statusFilter === 'unpaid', 'text-gray-500 dark:text-gray-400': statusFilter !== 'unpaid'}">
@@ -601,9 +615,11 @@
             <td class="p-4 whitespace-nowrap">
               <span class="text-sm text-gray-700 dark:text-gray-400">{{ row.nf }}</span>
             </td>
-            <td class="p-4 whitespace-nowrap">
-              <span class="text-sm text-gray-700 dark:text-gray-400">{{ row.description }}</span>
-            </td>
+            <td class="p-4 min-w-[300px]">
+                <span class="text-sm text-gray-700 dark:text-gray-400 block break-words whitespace-normal">
+                  {{ row.description }}
+                </span>
+              </td>
             <td class="p-4 whitespace-nowrap">
               <span class="text-sm text-gray-700 dark:text-gray-400">
                 {{ row.amount | currency:'BRL':'symbol':'1.2-2' }}
@@ -625,7 +641,8 @@
                 [ngClass]="{
                   'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400': row.status === 'paid',
                   'bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-400': row.status === 'pending' || row.status === 'scheduled' || row.status === 'approved',
-                  'bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-400': row.status === 'overdue' || row.status === 'canceled'
+                  'bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-400': row.status === 'overdue' || row.status === 'canceled',
+                  'bg-purple-100 text-purple-800 dark:bg-purple-800/30 dark:text-purple-400': row.status === 'provisioned'
                 }"
               >
                 <svg

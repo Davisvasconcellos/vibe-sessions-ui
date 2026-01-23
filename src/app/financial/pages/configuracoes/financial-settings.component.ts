@@ -82,6 +82,15 @@ export class FinancialSettingsComponent implements OnInit {
     { value: 'other', labelKey: 'financial.bankAccount.form.types.other' }
   ];
 
+  paymentMethodOptions = [
+    { value: 'pix', labelKey: 'financial.transactions.form.payment.pix' },
+    { value: 'credit_card', labelKey: 'financial.transactions.form.payment.creditCard' },
+    { value: 'debit_card', labelKey: 'financial.transactions.form.payment.debitCard' },
+    { value: 'cash', labelKey: 'financial.transactions.form.payment.cash' },
+    { value: 'bank_transfer', labelKey: 'financial.transactions.form.payment.bankTransfer' },
+    { value: 'boleto', labelKey: 'financial.transactions.form.payment.billet' }
+  ];
+
   categoryTypes = [
     { value: 'receivable', label: 'Receita' },
     { value: 'payable', label: 'Despesa' }
@@ -128,7 +137,8 @@ export class FinancialSettingsComponent implements OnInit {
       account_number: [''],
       type: ['checking', Validators.required],
       initial_balance: [0, [Validators.required, Validators.min(0)]],
-      is_default: [false]
+      is_default: [false],
+      allowed_payment_methods: [[]],
     });
 
     this.categoryForm = this.fb.group({
@@ -315,12 +325,34 @@ export class FinancialSettingsComponent implements OnInit {
 
   // --- Bank Accounts Logic ---
 
+  isPaymentMethodSelected(methodValue: string): boolean {
+    const currentMethods = this.bankAccountForm.get('allowed_payment_methods')?.value || [];
+    return Array.isArray(currentMethods) && currentMethods.includes(methodValue);
+  }
+
+  togglePaymentMethod(methodValue: string, isChecked: boolean) {
+    const currentMethods = this.bankAccountForm.get('allowed_payment_methods')?.value || [];
+    let updatedMethods = Array.isArray(currentMethods) ? [...currentMethods] : [];
+
+    if (isChecked) {
+      if (!updatedMethods.includes(methodValue)) {
+        updatedMethods.push(methodValue);
+      }
+    } else {
+      updatedMethods = updatedMethods.filter((m: string) => m !== methodValue);
+    }
+
+    this.bankAccountForm.patchValue({ allowed_payment_methods: updatedMethods });
+    this.bankAccountForm.markAsDirty();
+  }
+
   addAccount() {
     this.editingBankAccount = null;
     this.bankAccountForm.reset({
       type: 'checking',
       initial_balance: 0,
-      is_default: false
+      is_default: false,
+      allowed_payment_methods: []
     });
     this.showBankAccountForm = true;
   }
@@ -334,7 +366,8 @@ export class FinancialSettingsComponent implements OnInit {
       account_number: account.account_number,
       type: account.type || 'checking',
       initial_balance: account.initial_balance,
-      is_default: account.is_default
+      is_default: account.is_default,
+      allowed_payment_methods: account.allowed_payment_methods || []
     });
     this.showBankAccountForm = true;
   }

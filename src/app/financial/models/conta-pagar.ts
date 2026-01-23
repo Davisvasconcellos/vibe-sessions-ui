@@ -1,4 +1,4 @@
-export type StatusConta = 'pending' | 'approved' | 'scheduled' | 'paid' | 'overdue' | 'canceled';
+export type StatusConta = 'pending' | 'approved' | 'scheduled' | 'paid' | 'overdue' | 'canceled' | 'provisioned';
 
 export interface Attachment {
   url: string;
@@ -8,6 +8,8 @@ export interface Attachment {
 export interface ContaPagar {
   id_code: string;
   vendor_id: string;
+  party_id?: string;
+  recurrence_id?: string;
   nf?: string;
   description?: string;
   amount: number;

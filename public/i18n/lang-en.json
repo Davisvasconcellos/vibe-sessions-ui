@@ -105,6 +105,35 @@
         "dashboard": "Dashboard",
         "playlist": "Playlist",
         "suggestions": "Suggestions"
+      },
+      "suggestions": {
+        "title": "MUSIC ",
+        "subtitle": "SUGGEST SONGS FOR THE BAND",
+        "newSuggestion": "New Suggestion",
+        "form": {
+          "songLabel": "Song",
+          "songPlaceholder": "Song name...",
+          "artistLabel": "Artist",
+          "artistPlaceholder": "Artist/Band name...",
+          "myInstrumentLabel": "My Instrument",
+          "inviteFriendsLabel": "Invite Friends (Optional)",
+          "friendLabel": "Friend",
+          "friendPlaceholder": "Type name...",
+          "suggestedInstrumentLabel": "Suggested Instrument",
+          "addButton": "Add",
+          "submitButton": "Create Suggestion"
+        },
+        "invites": {
+          "title": "Invites",
+          "from": "from:",
+          "accept": "Accept",
+          "reject": "Reject"
+        },
+        "mySuggestions": {
+          "title": "My Suggestions",
+          "edit": "Edit",
+          "delete": "Delete"
+        }
       }
     },
     "quest": {

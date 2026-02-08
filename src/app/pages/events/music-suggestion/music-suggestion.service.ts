@@ -65,10 +65,13 @@ export class MusicSuggestionService {
     private authService: AuthService
   ) {}
 
-  loadSuggestions(eventId?: string) {
+  loadSuggestions(eventId?: string, status?: string) {
     let params = new HttpParams();
     if (eventId) {
       params = params.set('event_id', eventId);
+    }
+    if (status) {
+      params = params.set('status', status);
     }
     
     this.http.get<{success: boolean, data: any[]}>(this.API_URL, { params }).subscribe({

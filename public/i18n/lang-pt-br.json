@@ -175,6 +175,39 @@
       }
     },
     "admin": {
+      "kanban": {
+        "tabs": {
+          "setlist": "Setlist da Jam",
+          "suggestions": "Sugestões"
+        },
+        "suggestions": {
+          "filter": {
+            "label": "Status",
+            "submitted": "Aguardando Aprovação",
+            "all": "Histórico Completo",
+            "search_placeholder": "Pesquisar música, artista ou criador..."
+          },
+          "table": {
+            "song_artist": "Música / Artista",
+            "suggested_by": "Sugerido por",
+            "participants": "Participantes",
+            "actions": "Ações",
+            "empty": "Nenhuma sugestão pendente encontrada."
+          },
+          "actions": {
+            "approve": "Aprovar",
+            "reject": "Recusar",
+            "confirm_approve": "Aprovar a música \"{{song}}\"?",
+            "confirm_reject": "Recusar a música \"{{song}}\"?"
+          }
+        },
+        "pagination": {
+          "showing": "Mostrando",
+          "to": "a",
+          "of": "de",
+          "results": "resultados"
+        }
+      },
       "list": {
         "title": "Lista de Eventos",
         "addButton": "Adicionar Evento"
@@ -466,6 +499,14 @@
         "fileType": "tipos permitidos: .jpg, .jpeg, .pdf, .txt, .csv",
         "ignoredFiles": "Alguns arquivos foram ignorados: {{reasons}}.",
         "andSeparator": " e "
+      }
+    },
+    "kanban": {
+      "pagination": {
+        "showing": "Mostrando",
+        "to": "a",
+        "of": "de",
+        "results": "resultados"
       }
     }
   }

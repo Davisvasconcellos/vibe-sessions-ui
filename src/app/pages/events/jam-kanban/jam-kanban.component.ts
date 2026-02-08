@@ -10,7 +10,8 @@ import { InputFieldComponent } from '../../../shared/components/form/input/input
 import { EventService, EventListItem, ApiJam, ApiSong } from '../event.service';
 import { NotificationComponent } from '../../../shared/components/ui/notification/notification/notification.component';
 import { forkJoin, of } from 'rxjs';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { MusicSuggestionService, MusicSuggestion } from '../music-suggestion/music-suggestion.service';
 
 type SongStatus = 'planned' | 'open_for_candidates' | 'on_stage' | 'played' | 'canceled';
 
@@ -30,6 +31,19 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
   get selectedEvent(): EventListItem | undefined {
     return this.events.find(e => e.id_code === this.selectedEventIdCode);
   }
+
+  activeView: 'setlist' | 'suggestions' = 'setlist';
+  suggestionViewMode: 'list' | 'grid' = 'list';
+  suggestionFilter: 'SUBMITTED' | 'ALL' = 'SUBMITTED';
+  suggestionSearchText: string = '';
+  suggestions: MusicSuggestion[] = []; // Raw data from API
+  filteredSuggestions: MusicSuggestion[] = []; // Filtered data for UI
+  
+  // Pagination
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  
+  suggestionsCount = 0;
 
   songs: ApiSong[] = [];
   tasks: Task[] = [];
@@ -66,6 +80,8 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
 
   constructor(
     private eventService: EventService,
+    private musicSuggestionService: MusicSuggestionService,
+    private translate: TranslateService,
     private appRef: ApplicationRef,
     private injector: Injector,
     private envInjector: EnvironmentInjector
@@ -73,6 +89,68 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.eventService.getEvents().subscribe({ next: (items) => this.events = items, error: () => this.events = [] });
+    
+    // Subscribe to suggestions updates
+    this.musicSuggestionService.suggestions$.subscribe(suggestions => {
+      this.suggestions = suggestions;
+      this.applyClientFilters();
+    });
+  }
+
+  applyClientFilters() {
+    let result = this.suggestions;
+
+    // 1. Text Search Filter
+    if (this.suggestionSearchText && this.suggestionSearchText.trim()) {
+      const term = this.suggestionSearchText.toLowerCase().trim();
+      result = result.filter(s => 
+        s.song_name.toLowerCase().includes(term) ||
+        s.artist_name.toLowerCase().includes(term) ||
+        (s.creator?.name || '').toLowerCase().includes(term)
+      );
+    }
+
+    this.filteredSuggestions = result;
+    this.suggestionsCount = this.suggestions.length;
+    this.currentPage = 1; // Reset to first page on filter change
+  }
+
+  get paginatedSuggestions(): MusicSuggestion[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.filteredSuggestions.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredSuggestions.length / this.itemsPerPage);
+  }
+
+  changePage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  approveSuggestion(suggestion: MusicSuggestion) {
+    const msg = this.translate.instant('events.admin.kanban.suggestions.actions.confirm_approve', { song: suggestion.song_name });
+    if (!confirm(msg)) return;
+    this.musicSuggestionService.updateSuggestion({ id: suggestion.id, status: 'APPROVED' }).subscribe({
+      next: () => {
+        // Optimistic update or wait for reload
+        // The subscription above will auto-update the list as it filters by SUBMITTED
+      },
+      error: () => alert('Erro ao aprovar sugestão')
+    });
+  }
+
+  rejectSuggestion(suggestion: MusicSuggestion) {
+    const msg = this.translate.instant('events.admin.kanban.suggestions.actions.confirm_reject', { song: suggestion.song_name });
+    if (!confirm(msg)) return;
+    this.musicSuggestionService.updateSuggestion({ id: suggestion.id, status: 'REJECTED' }).subscribe({
+      next: () => {
+        // The subscription above will auto-update
+      },
+      error: () => alert('Erro ao recusar sugestão')
+    });
   }
 
   ngOnDestroy(): void {
@@ -85,7 +163,17 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     if (!this.selectedEventIdCode) { this.selectedJam = null; this.songs = []; this.tasks = []; this.stopRefreshTimer(); return; }
     this.stopRefreshTimer();
     this.loadSelectedEvent();
+    this.refreshSuggestions();
     this.startRefreshTimer();
+  }
+
+  refreshSuggestions() {
+    if (this.selectedEventIdCode) {
+      // If SUBMITTED (default), don't send status to use backend default
+      // If ALL, send status=ALL
+      const statusParam = this.suggestionFilter === 'ALL' ? 'ALL' : undefined;
+      this.musicSuggestionService.loadSuggestions(this.selectedEventIdCode, statusParam);
+    }
   }
 
   private getExpandedStorageKey(): string {

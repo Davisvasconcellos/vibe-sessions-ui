@@ -7,7 +7,7 @@
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Evento</label>
-        <select [(ngModel)]="selectedEventIdCode" (ngModelChange)="onSelectEvent()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+        <select [(ngModel)]="selectedEventIdCode" (ngModelChange)="onSelectEvent($event)" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
           <option value="">— Escolha o evento —</option>
           <option *ngFor="let e of events" [value]="e.id_code">{{ e.eventName }}</option>
         </select>
@@ -368,43 +368,14 @@
     }
   </div>
 
-  <app-modal [isOpen]="showAddModal" (close)="closeAddModal()" className="max-w-[700px] p-5 lg:p-10 m-4">
-    <div class="px-2">
-      <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Adicionar música</h4>
-      <p class="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">Preencha os dados e selecione instrumentos com slots.</p>
-    </div>
-    <form class="flex flex-col" (ngSubmit)="insertSong()">
-      <div class="custom-scrollbar h-[450px] overflow-y-auto px-2">
-        <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-          <div class="sm:col-span-2">
-            <app-label>Título</app-label>
-            <app-input-field type="text" placeholder="Nome da música" [value]="newSong.title" (valueChange)="onTitleChange($event)" />
-          </div>
-          <div class="sm:col-span-2">
-            <app-label>Artista</app-label>
-            <app-input-field type="text" placeholder="Banda/Artista" [value]="newSong.artist" (valueChange)="onArtistChange($event)" />
-          </div>
-          <div class="sm:col-span-2">
-            <app-label>Instrumentos</app-label>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-              <div *ngFor="let ins of instrumentChoices" class="flex items-center gap-3">
-                <label class="flex items-center gap-2 w-full">
-                  <input type="checkbox" [(ngModel)]="instrumentForm[ins.key].enabled" name="chk-{{ins.key}}" class="rounded border-gray-300 dark:border-gray-600" />
-                  <span class="text-sm text-gray-700 dark:text-gray-300">{{ ins.label }}</span>
-                </label>
-                <input type="number" [(ngModel)]="instrumentForm[ins.key].slots" name="slots-{{ins.key}}" min="1" class="w-20 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center w-full gap-3 px-2 mt-6">
-        <button type="button" (click)="closeAddModal()" class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] sm:w-auto">Cancelar</button>
-        <button type="submit" class="flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto">Inserir</button>
-      </div>
-    </form>
-  </app-modal>
+  <app-music-suggestion-modal
+    [isOpen]="isMusicModalOpen"
+    [suggestion]="selectedSuggestionForModal"
+    [users]="availableUsers"
+    [eventId]="selectedEventIdCode"
+    (close)="closeMusicModal()"
+    (save)="onMusicModalSave($event)">
+  </app-music-suggestion-modal>
 
   <app-modal [isOpen]="isDeleteModalOpen" (close)="closeDeleteModal()" [showCloseButton]="false" className="max-w-[450px] mx-4">
     <div class="p-6 text-center w-full mx-auto">

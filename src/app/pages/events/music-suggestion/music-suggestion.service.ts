@@ -118,6 +118,19 @@ export class MusicSuggestionService {
       tap(updated => this.updateLocalState(updated))
     );
   }
+  
+  approveSuggestionOverride(id: string, payload: {
+    jam_id: string | number,
+    instrument_slots?: Array<{ instrument: string, slots: number, required?: boolean, fallback_allowed?: boolean }>,
+    pre_approved_candidates?: Array<{ user_id: string, instrument: string }>
+  }): Observable<any> {
+    return this.http.post<{ success: boolean, data?: any }>(`${this.API_URL}/${id}/approve`, payload).pipe(
+      tap(() => {
+        const current = this.suggestionsSubject.value;
+        this.suggestionsSubject.next(current.filter(s => s.id !== id && s.id_code !== id));
+      })
+    );
+  }
 
   // Participants
   addParticipant(suggestionId: string, userId: string, instrument: string): Observable<MusicSuggestion> {

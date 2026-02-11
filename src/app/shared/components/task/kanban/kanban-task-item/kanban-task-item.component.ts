@@ -189,7 +189,7 @@ export class KanbanTaskItemComponent {
       status: 'approved'
     });
     if (eventId && jamId && songId && candidateId) {
-      this.eventService.approveSongCandidate(eventId, jamId, songId, candidateId).subscribe({
+      this.eventService.setSongApplicationStatus(eventId, jamId, songId, instrument, { id: candidateId }, 'approved').subscribe({
         error: () => {
           bucket.approved = prevApproved;
           bucket.pending = prevPending;

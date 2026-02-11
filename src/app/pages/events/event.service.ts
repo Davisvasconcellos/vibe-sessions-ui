@@ -173,6 +173,7 @@ export interface CreateSongAutoPayload {
   status?: 'planned' | 'open_for_candidates' | 'on_stage' | 'played' | 'canceled';
   order_index?: number;
   instrument_slots: AutoInstrumentSlotPayload[];
+  pre_approved_candidates?: Array<{ user_id: string; instrument: string }>;
 }
 
 export interface CreateSongAutoResult {

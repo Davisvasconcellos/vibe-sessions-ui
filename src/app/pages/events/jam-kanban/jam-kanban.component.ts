@@ -5,13 +5,12 @@ import { BoardColumnComponent } from '../../../shared/components/task/kanban/boa
 import { Task } from '../../../shared/components/task/kanban/types/types';
 import { DndDropEvent, DndModule } from 'ngx-drag-drop';
 import { ModalComponent } from '../../../shared/components/ui/modal/modal.component';
-import { LabelComponent } from '../../../shared/components/form/label/label.component';
-import { InputFieldComponent } from '../../../shared/components/form/input/input-field.component';
 import { EventService, EventListItem, ApiJam, ApiSong } from '../event.service';
 import { NotificationComponent } from '../../../shared/components/ui/notification/notification/notification.component';
 import { forkJoin, of } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { MusicSuggestionService, MusicSuggestion } from '../music-suggestion/music-suggestion.service';
+import { MusicSuggestionModalComponent } from './components/music-suggestion-modal/music-suggestion-modal.component';
 
 type SongStatus = 'planned' | 'open_for_candidates' | 'on_stage' | 'played' | 'canceled';
 
@@ -19,7 +18,7 @@ type SongStatus = 'planned' | 'open_for_candidates' | 'on_stage' | 'played' | 'c
 @Component({
   selector: 'app-jam-kanban',
   standalone: true,
-  imports: [CommonModule, FormsModule, BoardColumnComponent, DndModule, ModalComponent, LabelComponent, InputFieldComponent, TranslateModule],
+  imports: [CommonModule, FormsModule, BoardColumnComponent, DndModule, ModalComponent, TranslateModule, MusicSuggestionModalComponent],
   templateUrl: './jam-kanban.component.html',
   styleUrl: './jam-kanban.component.css'
 })
@@ -47,36 +46,10 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
 
   songs: ApiSong[] = [];
   tasks: Task[] = [];
-  showAddModal = false;
   isLoading = false;
   private jamStream: EventSource | null = null;
   private refreshTimerId: any = null;
   private readonly refreshIntervalMs = 60000;
-
-  // Form nova música
-  newSong = { title: '', artist: '' };
-  instrumentChoices = [
-    { key: 'vocals', label: 'Voz' },
-    { key: 'guitar', label: 'Guitarra' },
-    { key: 'bass', label: 'Baixo' },
-    { key: 'keys', label: 'Teclado' },
-    { key: 'drums', label: 'Bateria' },
-    { key: 'horns', label: 'Metais' },
-    { key: 'percussion', label: 'Percussão' },
-    { key: 'strings', label: 'Cordas' },
-    { key: 'other', label: 'Outro' },
-  ];
-  instrumentForm: Record<string, { enabled: boolean; slots: number }> = {
-    vocals: { enabled: false, slots: 1 },
-    guitar: { enabled: false, slots: 1 },
-    bass: { enabled: false, slots: 1 },
-    keys: { enabled: false, slots: 1 },
-    drums: { enabled: false, slots: 1 },
-    horns: { enabled: false, slots: 1 },
-    percussion: { enabled: false, slots: 1 },
-    strings: { enabled: false, slots: 1 },
-    other: { enabled: false, slots: 1 },
-  };
 
   constructor(
     private eventService: EventService,
@@ -95,6 +68,17 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
       this.suggestions = suggestions;
       this.applyClientFilters();
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.jamStream) {
+      this.jamStream.close();
+      this.jamStream = null;
+    }
+    if (this.refreshTimerId) {
+      clearInterval(this.refreshTimerId);
+      this.refreshTimerId = null;
+    }
   }
 
   applyClientFilters() {
@@ -134,285 +118,243 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     }
   }
 
-  approveSuggestion(suggestion: MusicSuggestion) {
-    const msg = this.translate.instant('events.admin.kanban.suggestions.actions.confirm_approve', { song: suggestion.song_name });
-    if (!confirm(msg)) return;
-    this.musicSuggestionService.updateSuggestion({ 
-      id: suggestion.id, 
-      id_code: suggestion.id_code,
-      status: 'APPROVED' 
-    }).subscribe({
-      next: () => {
-        // Optimistic update or wait for reload
-        // The subscription above will auto-update the list as it filters by SUBMITTED
+  get plannedTasks(): Task[] {
+    return this.tasks.filter(t => t.status === 'planned');
+  }
+
+  get openTasks(): Task[] {
+    return this.tasks.filter(t => t.status === 'open_for_candidates');
+  }
+
+  get onStageTasks(): Task[] {
+    return this.tasks.filter(t => t.status === 'on_stage');
+  }
+
+  get playedTasks(): Task[] {
+    return this.tasks.filter(t => t.status === 'played');
+  }
+
+  onRefreshClick() {
+    this.refreshSuggestions();
+    this.loadJamsAndSongs();
+  }
+
+  // Music Modal
+  isMusicModalOpen = false;
+  selectedSuggestionForModal: MusicSuggestion | null = null;
+  availableUsers: any[] = [];
+
+  openAddModal() { 
+    if (!this.selectedEventIdCode) return; 
+    this.selectedSuggestionForModal = null;
+    this.isMusicModalOpen = true; 
+  }
+
+  closeMusicModal() {
+    this.isMusicModalOpen = false;
+    this.selectedSuggestionForModal = null;
+  }
+
+  onSelectEvent(newValue?: string) {
+    if (newValue) this.selectedEventIdCode = newValue;
+    this.refreshSuggestions();
+    this.loadEventGuests();
+    this.loadJamsAndSongs();
+  }
+
+  loadJamsAndSongs() {
+    if (!this.selectedEventIdCode) return;
+    this.isLoading = true;
+    this.eventService.getEventJams(this.selectedEventIdCode).subscribe({
+      next: (jams) => {
+        if (jams.length > 0) {
+          this.selectedJam = jams[0];
+          const songs = this.selectedJam.songs || [];
+          this.songs = songs;
+          this.mapSongsToTasks(songs);
+        } else {
+          this.selectedJam = null;
+          this.tasks = [];
+          this.isLoading = false;
+        }
       },
-      error: () => alert('Erro ao aprovar sugestão')
-    });
-  }
-
-  rejectSuggestion(suggestion: MusicSuggestion) {
-    const msg = this.translate.instant('events.admin.kanban.suggestions.actions.confirm_reject', { song: suggestion.song_name });
-    if (!confirm(msg)) return;
-    this.musicSuggestionService.updateSuggestion({ 
-      id: suggestion.id, 
-      id_code: suggestion.id_code,
-      status: 'REJECTED' 
-    }).subscribe({
-      next: () => {
-        // The subscription above will auto-update
-      },
-      error: () => alert('Erro ao recusar sugestão')
-    });
-  }
-
-  // Delete Modal
-  isDeleteModalOpen = false;
-  suggestionToDelete: MusicSuggestion | null = null;
-
-  openDeleteModal(suggestion: MusicSuggestion) {
-    this.suggestionToDelete = suggestion;
-    this.isDeleteModalOpen = true;
-  }
-
-  closeDeleteModal() {
-    this.isDeleteModalOpen = false;
-    this.suggestionToDelete = null;
-  }
-
-  confirmDelete() {
-    if (!this.suggestionToDelete) return;
-    const id = this.suggestionToDelete.id_code || this.suggestionToDelete.id;
-    this.musicSuggestionService.deleteSuggestion(id).subscribe({
-      next: () => {
-        this.triggerToast('success', 'Sugestão excluída', `A música "${this.suggestionToDelete?.song_name}" foi removida.`);
-        this.closeDeleteModal();
-      },
-      error: () => {
-        this.triggerToast('error', 'Erro ao excluir', 'Não foi possível remover a sugestão.');
-        this.closeDeleteModal();
+      error: (err) => {
+        console.error('Erro ao carregar Jams:', err);
+        this.selectedJam = null;
+        this.tasks = [];
+        this.isLoading = false;
+        this.triggerToast('error', 'Erro', 'Falha ao carregar Jams do evento.');
       }
     });
   }
 
-  ngOnDestroy(): void {
-    this.stopJamStream();
-    this.stopRefreshTimer();
+  private mapSongsToTasks(songs: ApiSong[]) {
+    this.tasks = songs.map(s => ({
+      id: String(s.id),
+      title: s.title,
+      dueDate: '',
+      assignee: '/images/user/user-01.jpg',
+      status: (s.status as SongStatus) || 'planned',
+      category: { name: 'Jam', color: 'default' },
+      expanded: false,
+      song: s,
+      ready: s.ready || false,
+      orderIndex: (typeof s.order_index === 'number' ? Number(s.order_index) : undefined)
+    }));
+    this.loadExpandedState();
+    this.isLoading = false;
   }
 
+  loadEventGuests() {
+    if (!this.selectedEventIdCode) return;
+    this.eventService.getEventGuests(this.selectedEventIdCode).subscribe({
+      next: (guests) => {
+        this.availableUsers = guests.map(g => ({
+          id: g.id,
+          name: g.display_name || (g as any).name || 'Sem nome',
+          avatar: g.avatar_url || '/images/user/default-avatar.jpg'
+        }));
+      },
+      error: () => this.availableUsers = []
+    });
+  }
 
-  onSelectEvent(): void {
-    if (!this.selectedEventIdCode) { this.selectedJam = null; this.songs = []; this.tasks = []; this.stopRefreshTimer(); return; }
-    this.stopRefreshTimer();
-    this.loadSelectedEvent();
-    this.refreshSuggestions();
-    this.startRefreshTimer();
+  onMusicModalSave(data: any) {
+    const participants = data.participants || [];
+
+    if (this.selectedSuggestionForModal) {
+      // Edit/Approve with override payload support
+      const suggestionId = this.selectedSuggestionForModal.id_code;
+      if (!suggestionId) {
+        this.triggerToast('error', 'Erro', 'Sugestão sem id_code. Não foi possível aprovar.');
+        return;
+      }
+      const jamId = this.selectedJam?.id;
+      if (!jamId) {
+        this.triggerToast('error', 'Erro', 'Jam não selecionada para aprovação.');
+        return;
+      }
+      const instrumentSlots = Object.entries(data.slots || {})
+          .filter(([_, count]) => (count as number) > 0)
+          .map(([inst, count]) => ({ 
+            instrument: this.mapInstrumentKey(inst), 
+            slots: count as number,
+            required: true,
+            fallback_allowed: true 
+          }));
+      const preApproved = participants.map((p: any) => ({
+        user_id: p.user_id,
+        instrument: this.mapInstrumentKey(p.instrument)
+      }));
+      const approvePayload = {
+        jam_id: jamId,
+        instrument_slots: instrumentSlots,
+        pre_approved_candidates: preApproved
+      };
+      this.musicSuggestionService.approveSuggestionOverride(suggestionId, approvePayload).subscribe({
+        next: () => {
+          this.triggerToast('success', 'Sugestão aprovada', `A sugestão foi aprovada e inserida no planned.`);
+          this.closeMusicModal();
+          // Remove da lista e atualiza kanban
+          this.refreshSuggestions();
+          this.loadJamsAndSongs();
+        },
+        error: () => this.triggerToast('error', 'Erro', 'Falha ao aprovar sugestão.')
+      });
+
+    } else {
+      // Create via createSongAuto (Song + Slots)
+      const instrumentSlots = Object.entries(data.slots || {})
+          .filter(([_, count]) => (count as number) > 0)
+          .map(([inst, count]) => ({ 
+            instrument: this.mapInstrumentKey(inst), 
+            slots: count as number,
+            required: false,
+            fallback_allowed: true 
+          }));
+
+      const payload: any = {
+        title: data.song_name,
+        artist: data.artist_name,
+        instrument_slots: instrumentSlots,
+        pre_approved_candidates: participants.map((p: any) => ({
+          user_id: p.user_id,
+          instrument: this.mapInstrumentKey(p.instrument)
+        })),
+        status: 'planned' as SongStatus
+      };
+
+      this.eventService.createSongAuto(this.selectedEventIdCode, payload).subscribe({
+        next: (res) => {
+          const songId = res.song.id;
+          const jamId = res.jam.id;
+          this.triggerToast('success', 'Música adicionada', `"${data.song_name}" foi adicionada.`);
+          this.closeMusicModal();
+          if (this.selectedJam && res.jam.id === this.selectedJam.id) {
+            const song = res.song;
+            this.tasks.unshift({ 
+              id: String(song.id), 
+              title: song.title, 
+              dueDate: '', 
+              assignee: '/images/user/user-01.jpg', 
+              status: (song.status as SongStatus) || 'planned', 
+              category: { name: 'Jam', color: 'default' }, 
+              expanded: false, 
+              song, 
+              ready: false, 
+              orderIndex: (typeof (song as any).order_index === 'number' ? Number((song as any).order_index) : undefined) 
+            });
+          }
+        },
+        error: () => this.triggerToast('error', 'Erro', 'Falha ao criar música.')
+      });
+    }
+  }
+
+  approveSuggestion(suggestion: MusicSuggestion) {
+    this.selectedSuggestionForModal = suggestion;
+    this.isMusicModalOpen = true;
   }
 
   refreshSuggestions() {
     if (this.selectedEventIdCode) {
-      // If SUBMITTED (default), don't send status to use backend default
-      // If ALL, send status=ALL
-      const statusParam = this.suggestionFilter === 'ALL' ? 'ALL' : undefined;
-      this.musicSuggestionService.loadSuggestions(this.selectedEventIdCode, statusParam);
+      this.musicSuggestionService.loadSuggestions(this.selectedEventIdCode, 'ALL');
     }
   }
 
-  private getExpandedStorageKey(): string {
-    const eventKey = String(this.selectedEventIdCode || '').trim();
-    const jamKey = String(this.selectedJam?.id ?? '').trim();
-    return `jam-kanban:expanded:${eventKey}:${jamKey}`;
+  sortByOrder() {
+    this.tasks.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
   }
 
-  private loadExpandedState(): Record<string, number> {
-    const key = this.getExpandedStorageKey();
+  loadExpandedState() {
     try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return {};
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === 'object') return parsed as Record<string, number>;
-      return {};
-    } catch { return {}; }
-  }
-
-  private saveExpandedState(state: Record<string, number>): void {
-    const key = this.getExpandedStorageKey();
-    try { localStorage.setItem(key, JSON.stringify(state)); } catch {}
-  }
-
-  private applyExpandedState(nextTasks: Task[]): Task[] {
-    const persisted = this.loadExpandedState();
-    return nextTasks.map(t => ({ ...t, expanded: !!persisted[String(t.id)] }));
-  }
-
-  private loadSelectedEvent(): void {
-    this.isLoading = true;
-    this.eventService.getEventJams(this.selectedEventIdCode).subscribe({
-      next: (jams) => {
-        this.selectedJam = jams && jams.length ? jams[0] : null;
-        const jam = this.selectedJam as (ApiJam & { songs?: ApiSong[] }) | null;
-        if (jam) {
-          this.startJamStream();
-          if (Array.isArray(jam.songs) && jam.songs.length) {
-            this.songs = jam.songs;
-            const nextTasks = jam.songs.map(s => ({ id: String(s.id), title: s.title, dueDate: '', assignee: '/images/user/user-01.jpg', status: (s.status as SongStatus) || 'planned', category: { name: 'Jam', color: 'default' }, expanded: false, song: s, ready: !!(s as any).ready, orderIndex: (!!(s as any).ready && typeof (s as any).order_index === 'number' ? Number((s as any).order_index) : undefined) }));
-            this.tasks = this.applyExpandedState(nextTasks);
-            this.isLoading = false;
-          } else {
-            this.loadSongs(true);
-          }
-        } else {
-          this.songs = [];
-          this.tasks = [];
-          this.isLoading = false;
-          this.stopJamStream();
-        }
-      },
-      error: () => { this.selectedJam = null; this.songs = []; this.tasks = []; this.isLoading = false; }
-    });
-  }
-
-  loadSongs(setLoading?: boolean): void {
-    const jam = this.selectedJam;
-    if (!jam || !this.selectedEventIdCode) { this.songs = []; this.tasks = []; if (setLoading) this.isLoading = false; return; }
-    if (setLoading) this.isLoading = true;
-    this.eventService.getJamSongs(this.selectedEventIdCode, jam.id).subscribe({
-      next: (items) => {
-        this.songs = items;
-        const nextTasks = items.map(s => ({ id: String(s.id), title: s.title, dueDate: '', assignee: '/images/user/user-01.jpg', status: (s.status as SongStatus) || 'planned', category: { name: 'Jam', color: 'default' }, expanded: false, song: s, ready: !!(s as any).ready, orderIndex: (!!(s as any).ready && typeof (s as any).order_index === 'number' ? Number((s as any).order_index) : undefined) }));
-        this.tasks = this.applyExpandedState(nextTasks);
-        if (setLoading) this.isLoading = false;
-
-      },
-      error: () => { this.songs = []; this.tasks = []; if (setLoading) this.isLoading = false; }
-    });
-  }
-
-  private startJamStream(): void {
-    const eventId = this.selectedEventIdCode;
-    const jamId = this.selectedJam?.id;
-    if (!eventId || !jamId) return;
-    this.stopJamStream();
-    const es = this.eventService.streamJam(eventId, jamId);
-    this.jamStream = es;
-    es.onopen = () => { try { console.log('[SSE][Jam] open', { eventId, jamId }); } catch {} };
-    es.onmessage = (ev: MessageEvent) => {
-      try { console.log('[SSE][Jam] message', { type: (ev as any)?.type || 'message', data: ev.data }); } catch {}
-    };
-    es.onerror = (err: any) => { try { console.log('[SSE][Jam] error', err); } catch {} };
-  }
-
-  private stopJamStream(): void {
-    if (this.jamStream) {
-      try { this.jamStream.close(); } catch {}
-      this.jamStream = null;
-    }
-  }
-
-  private startRefreshTimer(): void {
-    this.stopRefreshTimer();
-    this.refreshTimerId = setInterval(() => {
-      if (!this.selectedEventIdCode) { this.stopRefreshTimer(); return; }
-      this.loadSelectedEvent();
-    }, this.refreshIntervalMs);
-  }
-
-  private stopRefreshTimer(): void {
-    if (this.refreshTimerId) { try { clearInterval(this.refreshTimerId); } catch {} this.refreshTimerId = null; }
-  }
-
-  onRefreshClick(): void {
-    if (!this.selectedEventIdCode) return;
-    this.stopRefreshTimer();
-    this.loadSelectedEvent();
-    this.startRefreshTimer();
-  }
-
-  private sortByOrder(a: Task, b: Task): number {
-    const ai = typeof a.orderIndex === 'number' ? a.orderIndex : Number.MAX_SAFE_INTEGER;
-    const bi = typeof b.orderIndex === 'number' ? b.orderIndex : Number.MAX_SAFE_INTEGER;
-    return ai - bi;
-  }
-  get plannedTasks() { return this.tasks.filter(t => t.status === 'planned').sort((a,b)=>this.sortByOrder(a,b)); }
-  get openTasks() { return this.tasks.filter(t => t.status === 'open_for_candidates').sort((a,b)=>this.sortByOrder(a,b)); }
-  get onStageTasks() { return this.tasks.filter(t => t.status === 'on_stage').sort((a,b)=>this.sortByOrder(a,b)); }
-  get playedTasks() { return this.tasks.filter(t => t.status === 'played').sort((a,b)=>this.sortByOrder(a,b)); }
-
-  handleTaskDrop({ event, status }: { event: DndDropEvent, status: string }) {
-    const dragged = event.data as Task;
-    const fromStatus = dragged.status as SongStatus;
-    const toStatus = status as SongStatus;
-    const dropIndex = typeof event.index === 'number' ? event.index : undefined;
-    const jam = this.selectedJam;
-    if (!jam) return;
-
-    if (toStatus === 'on_stage' && !dragged.ready) {
-      return;
-    }
-
-    if (fromStatus === toStatus) {
-      this.reorderTask(dragged, toStatus, dropIndex);
-      return;
-    }
-
-    this.eventService.moveSongStatus(this.selectedEventIdCode, jam.id, dragged.id, toStatus).subscribe({
-      next: () => {
-        this.reorderTask(dragged, toStatus, dropIndex);
-        if (toStatus === 'on_stage') {
-          const task = this.tasks.find(t => t.id === dragged.id);
-          const buckets = task?.song?.instrument_buckets || [];
-          const rejects: any[] = [];
-          for (const b of buckets as any[]) {
-            const pend = Array.isArray(b?.pending) ? b.pending : [];
-            for (const u of pend) {
-              const cid = (u?.candidate_id ?? u?.application_id ?? u?.id ?? u?.user_id);
-              if (cid !== undefined && cid !== null) {
-                rejects.push(this.eventService.rejectSongCandidate(this.selectedEventIdCode, jam.id, dragged.id, cid));
-              }
-            }
-          }
-          if (rejects.length) forkJoin(rejects).subscribe({ next: () => {}, error: () => {} });
-        }
-      },
-      error: () => {
-        this.loadSongs();
+      const saved = localStorage.getItem('jam-kanban-expanded-tasks');
+      if (saved) {
+        const expandedIds = JSON.parse(saved);
+        this.tasks.forEach(t => {
+          if (expandedIds.includes(t.id)) t.expanded = true;
+        });
       }
-    });
+    } catch (e) { console.error('Error loading expanded state', e); }
   }
 
-  private reorderTask(dragged: Task, toStatus: SongStatus, dropIndex?: number): void {
-    const withoutDragged = this.tasks.filter(t => t.id !== dragged.id);
+  saveExpandedState() {
+    try {
+      const expandedIds = this.tasks.filter(t => t.expanded).map(t => t.id);
+      localStorage.setItem('jam-kanban-expanded-tasks', JSON.stringify(expandedIds));
+    } catch (e) { console.error('Error saving expanded state', e); }
+  }
+
+  handleExpandedToggled(task: Task): void {
+    const idx = this.tasks.findIndex(t => t.id === task.id);
+    if (idx === -1) return;
+    this.tasks[idx] = { ...this.tasks[idx], expanded: !!task.expanded };
+    this.saveExpandedState();
+  }
+
+  private reindexApproved(): void {
     const isOpenApproved = (t: Task) => t.status === 'open_for_candidates' && t.ready === true;
-    const targetListUnsorted = toStatus === 'open_for_candidates'
-      ? withoutDragged.filter(isOpenApproved)
-      : withoutDragged.filter(t => t.status === toStatus);
-    const targetList = [...targetListUnsorted].sort((a,b)=>this.sortByOrder(a,b));
-    const fromStatusInitial = dragged.status as SongStatus;
-    let idx: number;
-    if (fromStatusInitial !== toStatus && toStatus === 'open_for_candidates' && (fromStatusInitial === 'on_stage' || fromStatusInitial === 'played')) {
-      // returning from stage/played: always append after last approved
-      idx = targetList.length;
-    } else {
-      const rawIdx = typeof dropIndex === 'number' ? dropIndex : targetList.length;
-      idx = Math.max(0, Math.min(rawIdx - 1, targetList.length));
-    }
-    const newDragged = { ...dragged, status: toStatus } as Task;
-    if (toStatus === 'planned') newDragged.ready = false;
-    else if (toStatus === 'on_stage' || toStatus === 'played') newDragged.ready = true;
-    const newTasks = [...withoutDragged];
-    if (idx < targetList.length) {
-      const beforeId = targetList[idx].id;
-      const beforeIndex = newTasks.findIndex(t => t.id === beforeId);
-      newTasks.splice(beforeIndex, 0, newDragged);
-    } else if (targetList.length) {
-      const lastId = targetList[targetList.length - 1].id;
-      const lastIndex = newTasks.findIndex(t => t.id === lastId);
-      newTasks.splice(lastIndex + 1, 0, newDragged);
-    } else {
-      newTasks.push(newDragged);
-    }
-    this.tasks = newTasks;
-    // Reindex only approved in open_for_candidates; clear others
-    const approvedList = this.tasks.filter(isOpenApproved);
+    const approvedList = this.tasks.filter(isOpenApproved).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
     approvedList.forEach((t, i) => {
       const idxGlobal = this.tasks.findIndex(x => x.id === t.id);
       this.tasks[idxGlobal] = { ...this.tasks[idxGlobal], orderIndex: i + 1 } as Task;
@@ -420,88 +362,6 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     this.tasks.filter(t => t.status !== 'open_for_candidates' || !t.ready).forEach(t => {
       const idxGlobal = this.tasks.findIndex(x => x.id === t.id);
       if (idxGlobal !== -1) this.tasks[idxGlobal] = { ...this.tasks[idxGlobal], orderIndex: undefined } as Task;
-    });
-
-    const orderedIds = this.tasks.filter(t => t.status === 'open_for_candidates' && t.ready).map(t => t.id);
-    const orderedOnStageIds = this.tasks.filter(t => t.status === 'on_stage').map(t => t.id);
-
-    try { console.log('[Kanban] Atualizar ordem', { status: toStatus, ordered_ids: orderedIds, on_stage_ids: orderedOnStageIds }); } catch {}
-    const jam = this.selectedJam;
-    const eventId = this.selectedEventIdCode;
-    if (jam && eventId && toStatus !== 'canceled') {
-      // Se moveu para ou dentro de open_for_candidates, persiste ordem open
-      const draggedStatus = dragged.status as string;
-      const targetStatus = toStatus as string;
-      if (targetStatus === 'open_for_candidates' || (draggedStatus === 'open_for_candidates' && targetStatus !== 'open_for_candidates')) {
-         const persistStatus: 'planned' | 'open_for_candidates' | 'on_stage' | 'played' = 'open_for_candidates';
-         this.eventService.updateSongOrder(eventId, jam.id, persistStatus, orderedIds).subscribe({
-           next: (ok) => { try { console.log('[Kanban] Ordem open persistida', ok); } catch {} },
-           error: (err) => { try { console.log('[Kanban] Falha ao persistir ordem open', err?.message || err); } catch {} }
-         });
-      }
-
-      // Se moveu para ou dentro de on_stage, persiste ordem stage
-      if (targetStatus === 'on_stage' || (draggedStatus === 'on_stage' && targetStatus !== 'on_stage')) {
-         const persistStatus: 'planned' | 'open_for_candidates' | 'on_stage' | 'played' = 'on_stage';
-         this.eventService.updateSongOrder(eventId, jam.id, persistStatus, orderedOnStageIds).subscribe({
-           next: (ok) => { try { console.log('[Kanban] Ordem stage persistida', ok); } catch {} },
-           error: (err) => { try { console.log('[Kanban] Falha ao persistir ordem stage', err?.message || err); } catch {} }
-         });
-      }
-    }
-  }
-
-  handleEditTask(task: Task): void {
-    const idx = this.tasks.findIndex(t => t.id === task.id);
-    if (idx !== -1) {
-      this.tasks[idx] = { ...this.tasks[idx], expanded: true };
-      const map = this.loadExpandedState();
-      map[String(task.id)] = 1;
-      this.saveExpandedState(map);
-    }
-  }
-
-  handleDeleteTask(task: Task): void {
-    const jam = this.selectedJam;
-    const eventId = this.selectedEventIdCode;
-    const songId = task?.song?.id ?? task?.id;
-    if (!jam || !eventId || !songId) return;
-    this.eventService.deleteSong(eventId, jam.id, songId).subscribe({
-      next: (ok) => {
-        if (ok) {
-          this.tasks = this.tasks.filter(t => t.id !== String(songId));
-          this.triggerToast('success', 'jam excluída...', 'A música foi removida do setlist.');
-        } else {
-          this.triggerToast('error', 'Erro ao excluir', 'Falha ao remover a música.');
-        }
-      },
-      error: (err) => {
-        const msg = (err?.error?.message || err?.message || 'Falha ao remover a música.');
-        this.triggerToast('error', 'Erro ao excluir', msg);
-      }
-    });
-  }
-
-  openAddModal() { if (!this.selectedEventIdCode) return; this.showAddModal = true; }
-  closeAddModal() { this.showAddModal = false; }
-
-  insertSong(): void {
-    if (!this.selectedEventIdCode) return;
-    const title = (this.newSong.title || '').trim();
-    if (!title) return;
-    const toggledSlots = Object.entries(this.instrumentForm)
-      .filter(([_, v]) => v.enabled)
-      .map(([k, v]) => ({ instrument: k, slots: Math.max(1, Number(v.slots) || 1) }));
-    const payload = { title, artist: (this.newSong.artist || '').trim() || undefined, instrument_slots: toggledSlots };
-    this.eventService.createSongAuto(this.selectedEventIdCode, payload).subscribe({
-      next: (res) => {
-        this.selectedJam = res.jam;
-        const song = res.song;
-        this.tasks.unshift({ id: String(song.id), title: song.title, dueDate: '', assignee: '/images/user/user-01.jpg', status: (song.status as SongStatus) || 'planned', category: { name: 'Jam', color: 'default' }, expanded: false, song, ready: false, orderIndex: (typeof (song as any).order_index === 'number' ? Number((song as any).order_index) : undefined) });
-        this.resetForm();
-        this.closeAddModal();
-      },
-      error: () => {}
     });
   }
 
@@ -511,13 +371,44 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     window.open(url, '_blank', 'noopener,noreferrer');
   }
 
-  resetForm(): void {
-    this.newSong = { title: '', artist: '' };
-    Object.keys(this.instrumentForm).forEach(k => { this.instrumentForm[k].enabled = false; this.instrumentForm[k].slots = 1; });
+  handleTaskDrop(data: { event: DndDropEvent, status: string }) {
+    const { event, status } = data;
+    const task = event.data as Task;
+    const oldStatus = task.status;
+    const newStatus = status as SongStatus;
+
+    if (oldStatus === newStatus && event.index === undefined) return;
+
+    const oldIndex = this.tasks.findIndex(t => t.id === task.id);
+    if (oldIndex > -1) this.tasks.splice(oldIndex, 1);
+    
+    task.status = newStatus;
+    this.tasks.push(task); 
+
+    if (this.selectedEventIdCode && this.selectedJam && task.song) {
+       this.eventService.moveSongStatus(this.selectedEventIdCode, this.selectedJam.id, task.song.id, newStatus).subscribe({
+         error: () => this.triggerToast('error', 'Erro', 'Falha ao mover música.')
+       });
+    }
   }
 
-  onTitleChange(val: string | number) { this.newSong.title = String(val || ''); }
-  onArtistChange(val: string | number) { this.newSong.artist = String(val || ''); }
+  handleEditTask(task: Task) {
+    this.triggerToast('info', 'Em breve', 'Edição de música será implementada em breve.');
+  }
+
+  handleDeleteTask(task: Task) {
+    if (!task.song || !this.selectedEventIdCode || !this.selectedJam) return;
+    
+    if (confirm(`Tem certeza que deseja remover "${task.title}"?`)) {
+       this.eventService.deleteSong(this.selectedEventIdCode, this.selectedJam.id, task.song.id).subscribe({
+         next: () => {
+           this.tasks = this.tasks.filter(t => t.id !== task.id);
+           this.triggerToast('success', 'Removido', 'Música removida.');
+         },
+         error: () => this.triggerToast('error', 'Erro', 'Falha ao remover música.')
+       });
+    }
+  }
 
   handleReadyToggled(task: Task): void {
     const idx = this.tasks.findIndex(t => t.id === task.id);
@@ -548,13 +439,52 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
     }
   }
 
-  handleExpandedToggled(task: Task): void {
-    const idx = this.tasks.findIndex(t => t.id === task.id);
-    if (idx === -1) return;
-    this.tasks[idx] = { ...this.tasks[idx], expanded: !!task.expanded };
-    const map = this.loadExpandedState();
-    if (task.expanded) map[String(task.id)] = 1; else delete map[String(task.id)];
-    this.saveExpandedState(map);
+  // Delete Modal
+  isDeleteModalOpen = false;
+  suggestionToDelete: MusicSuggestion | null = null;
+
+  openDeleteModal(suggestion: MusicSuggestion) {
+    this.suggestionToDelete = suggestion;
+    this.isDeleteModalOpen = true;
+  }
+
+  private mapInstrumentKey(inst: string): string {
+    const norm = String(inst || '').toLowerCase();
+    if (norm.includes('voz') || norm.includes('vocal') || norm.includes('cantor') || norm.includes('mic')) return 'vocals';
+    if (norm.includes('guitarra') || norm.includes('violão') || norm.includes('violao') || norm.includes('guitar') || norm.includes('acoustic')) return 'guitar';
+    if (norm.includes('baixo') || norm.includes('bass')) return 'bass';
+    if (norm.includes('bateria') || norm.includes('drum') || norm.includes('batera')) return 'drums';
+    if (norm.includes('teclado') || norm.includes('piano') || norm.includes('key') || norm.includes('synth') || norm.includes('orgão') || norm.includes('orgao')) return 'keys';
+    if (norm.includes('metais') || norm.includes('horn') || norm.includes('sax') || norm.includes('trompete') || norm.includes('trombone') || norm.includes('flauta') || norm.includes('wind') || norm.includes('sopro')) return 'horns';
+    if (norm.includes('percussão') || norm.includes('percussao') || norm.includes('percussion') || norm.includes('conga') || norm.includes('cajon') || norm.includes('pandeiro')) return 'percussion';
+    if (norm.includes('cordas') || norm.includes('string') || norm.includes('violino') || norm.includes('cello') || norm.includes('viola')) return 'strings';
+    return 'other';
+  }
+
+  closeDeleteModal() {
+    this.isDeleteModalOpen = false;
+    this.suggestionToDelete = null;
+  }
+
+  confirmDelete() {
+    if (!this.suggestionToDelete) return;
+    
+    const id = this.suggestionToDelete.id_code;
+    if (!id) {
+      this.triggerToast('error', 'Erro', 'Sugestão sem id_code. Não foi possível remover.');
+      return;
+    }
+
+    this.musicSuggestionService.deleteSuggestion(id).subscribe({
+      next: () => {
+        this.triggerToast('success', 'Sugestão removida', `Música "${this.suggestionToDelete?.song_name}" removida.`);
+        this.closeDeleteModal();
+        this.refreshSuggestions();
+      },
+      error: () => {
+        this.triggerToast('error', 'Erro', 'Falha ao remover sugestão.');
+      }
+    });
   }
 
   private triggerToast(
@@ -584,18 +514,5 @@ export class JamKanbanComponent implements OnInit, OnDestroy {
       this.appRef.detachView(compRef.hostView);
       compRef.destroy();
     }, 3200);
-  }
-
-  private reindexApproved(): void {
-    const isOpenApproved = (t: Task) => t.status === 'open_for_candidates' && t.ready === true;
-    const approvedList = this.tasks.filter(isOpenApproved).sort((a,b)=>this.sortByOrder(a,b));
-    approvedList.forEach((t, i) => {
-      const idxGlobal = this.tasks.findIndex(x => x.id === t.id);
-      this.tasks[idxGlobal] = { ...this.tasks[idxGlobal], orderIndex: i + 1 } as Task;
-    });
-    this.tasks.filter(t => t.status !== 'open_for_candidates' || !t.ready).forEach(t => {
-      const idxGlobal = this.tasks.findIndex(x => x.id === t.id);
-      if (idxGlobal !== -1) this.tasks[idxGlobal] = { ...this.tasks[idxGlobal], orderIndex: undefined } as Task;
-    });
   }
 }
